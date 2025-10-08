@@ -1,21 +1,28 @@
-// Firebase Import
-import { db, storage } from '../../firebase.js';
-import { 
-    collection, 
-    addDoc, 
-    updateDoc, 
-    deleteDoc, 
-    doc, 
-    getDocs 
-} from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js';
-import { 
-    ref, 
-    uploadBytes, 
-    getDownloadURL 
-} from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-storage.js';
+// Firebase services import using CDN
+const { initializeApp } = firebase;
+const { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, getDocs } = firebase.firestore;
+const { getStorage, ref, uploadBytes, getDownloadURL } = firebase.storage;
+
+// Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyC-25CvcxzGmFuw3wRg-T9U-eKPuckFw0c",
+  authDomain: "fototaker-studio.firebaseapp.com",
+  projectId: "fototaker-studio",
+  storageBucket: "fototaker-studio.firebasestorage.app",
+  messagingSenderId: "401638389477",
+  appId: "1:401638389477:web:a8af16d0f9b49bf8dc460c",
+  measurementId: "G-W4NT35YBQJ"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
 // Admin Login System
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Admin panel loaded');
+    
     // Check if user is already logged in
     if (localStorage.getItem('adminLoggedIn') === 'true' && 
         window.location.pathname.includes('admin-login.html')) {
@@ -30,6 +37,8 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
+            
+            console.log('Login attempt:', username);
             
             // Simple authentication
             if (username === 'admin' && password === 'password123') {
@@ -49,8 +58,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Admin Dashboard Functions
 function initAdminDashboard() {
+    console.log('Initializing admin dashboard');
+    
     // Check authentication
     if (localStorage.getItem('adminLoggedIn') !== 'true') {
+        alert('Please login first');
         window.location.href = 'admin-login.html';
         return;
     }
