@@ -194,8 +194,6 @@ document.addEventListener('DOMContentLoaded', function() {
         serviceObserver.observe(card);
     });
     
-    // Portfolio animation - REMOVED (will be handled by loadPortfolioFromFirebase)
-    
     // Contact form
     const contactForm = document.querySelector('.contact-form');
     if (contactForm) {
@@ -213,9 +211,8 @@ document.addEventListener('DOMContentLoaded', function() {
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
             submitBtn.disabled = true;
             
-            // Simulate API call - In real app, send to backend
+            // Simulate API call
             setTimeout(() => {
-                // Save to localStorage for demo (in real app, send to server)
                 const formData = {
                     name,
                     email,
@@ -224,15 +221,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     timestamp: new Date().toISOString()
                 };
                 
-                // Save to localStorage
                 let existingData = JSON.parse(localStorage.getItem('contactSubmissions')) || [];
                 existingData.push(formData);
                 localStorage.setItem('contactSubmissions', JSON.stringify(existingData));
                 
-                // Show success message
                 showNotification(`Thank you ${name}! We have received your message and will contact you soon.`, 'success');
                 
-                // Reset form
                 this.reset();
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
@@ -253,23 +247,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set active link on page load
     updateActiveNavLink();
     
-    // Load portfolio from Firebase - YEH LINE CHANGE KARO
+    // Load portfolio from Firebase
     loadPortfolioFromFirebase();
     
     console.log('Website initialized successfully');
 });
 
-// Load portfolio data from Firebase - YEH NAYA FUNCTION
+// Load portfolio data from Firebase - SIMPLE VERSION
 async function loadPortfolioFromFirebase() {
     const portfolioGrid = document.querySelector('.portfolio-grid');
     
     if (!portfolioGrid) return;
     
     try {
-        // Firebase import
-        const { db, collection, getDocs } = await import('./firebase.js');
-        
-        const querySnapshot = await getDocs(collection(db, 'portfolio'));
+        // Use global firebase object
+        const db = firebase.firestore();
+        const querySnapshot = await db.collection('portfolio').get();
         const portfolioData = [];
         
         querySnapshot.forEach((doc) => {
@@ -286,12 +279,10 @@ async function loadPortfolioFromFirebase() {
             displayPortfolioItems(portfolioData);
             console.log('Portfolio loaded from Firebase - Items:', portfolioData.length);
         } else {
-            // Fallback to JSON file if Firebase is empty
             await loadPortfolioFromJSON();
         }
     } catch (error) {
         console.log('Error loading from Firebase, trying JSON fallback:', error);
-        // Fallback to JSON file
         await loadPortfolioFromJSON();
     }
 }
@@ -303,7 +294,6 @@ async function loadPortfolioFromJSON() {
     if (!portfolioGrid) return;
     
     try {
-        // Try to load from JSON file
         const response = await fetch('./data/portfolio-data.json');
         
         if (response.ok) {
@@ -335,7 +325,6 @@ function displayPortfolioItems(items) {
         </div>
     `).join('');
     
-    // Initialize animations for new items
     initPortfolioAnimations();
 }
 
