@@ -1,5 +1,42 @@
+// Firebase Configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyC-25CvcxzGmFuw3wRg-T9U-eKPuckFw0c",
+    authDomain: "fototaker-studio.firebaseapp.com",
+    projectId: "fototaker-studio",
+    storageBucket: "fototaker-studio.firebasestorage.app",
+    messagingSenderId: "401638389477",
+    appId: "1:401638389477:web:a8af16d0f9b49bf8dc460c",
+    measurementId: "G-W4NT35YBQJ"
+};
+
+// Initialize Firebase
+function initializeFirebase() {
+    try {
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+            console.log("✅ Firebase initialized successfully");
+            return true;
+        } else {
+            console.log("ℹ️ Firebase already initialized");
+            return true;
+        }
+    } catch (error) {
+        console.error("❌ Firebase initialization error:", error);
+        showNotification('Firebase initialization failed!', 'error');
+        return false;
+    }
+}
+
 // Admin Login System
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Firebase first
+    const firebaseInitialized = initializeFirebase();
+    
+    if (!firebaseInitialized) {
+        console.error("Firebase initialization failed!");
+        return;
+    }
+
     // Check if user is already logged in
     if (localStorage.getItem('adminLoggedIn') === 'true' && 
         window.location.pathname.includes('admin-login.html')) {
@@ -137,6 +174,11 @@ async function savePortfolioItemToFirebase() {
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
         submitBtn.disabled = true;
         
+        // Check Firebase initialization
+        if (!firebase.apps.length) {
+            initializeFirebase();
+        }
+        
         const db = firebase.firestore();
         const portfolioData = {
             title,
@@ -181,6 +223,11 @@ async function loadPortfolioFromFirebase() {
     if (!portfolioGrid) return;
     
     try {
+        // Check Firebase initialization
+        if (!firebase.apps.length) {
+            initializeFirebase();
+        }
+        
         const db = firebase.firestore();
         const querySnapshot = await db.collection('portfolio').get();
         const portfolioData = [];
@@ -198,7 +245,7 @@ async function loadPortfolioFromFirebase() {
         displayPortfolioItemsAdmin(portfolioData);
     } catch (error) {
         console.error('Error loading portfolio:', error);
-        portfolioGrid.innerHTML = '<p>Error loading portfolio items. Please try again.</p>';
+        portfolioGrid.innerHTML = '<p>Error loading portfolio items. Please check console for details.</p>';
     }
 }
 
@@ -235,21 +282,22 @@ function displayPortfolioItemsAdmin(items) {
 // Edit Portfolio Item
 async function editPortfolioItem(id) {
     try {
+        // Check Firebase initialization
+        if (!firebase.apps.length) {
+            initializeFirebase();
+        }
+        
         const db = firebase.firestore();
-        const querySnapshot = await db.collection('portfolio').get();
-        let item = null;
+        const doc = await db.collection('portfolio').doc(id).get();
         
-        querySnapshot.forEach((doc) => {
-            if (doc.id === id) {
-                item = {
-                    id: doc.id,
-                    ...doc.data()
-                };
-            }
-        });
-        
-        if (item) {
+        if (doc.exists) {
+            const item = {
+                id: doc.id,
+                ...doc.data()
+            };
             showPortfolioForm(item);
+        } else {
+            showNotification('Item not found!', 'error');
         }
     } catch (error) {
         console.error('Error loading item for edit:', error);
@@ -261,6 +309,11 @@ async function editPortfolioItem(id) {
 async function deletePortfolioItem(id) {
     if (confirm('Are you sure you want to delete this item?')) {
         try {
+            // Check Firebase initialization
+            if (!firebase.apps.length) {
+                initializeFirebase();
+            }
+            
             const db = firebase.firestore();
             await db.collection('portfolio').doc(id).delete();
             loadPortfolioFromFirebase();
@@ -275,6 +328,11 @@ async function deletePortfolioItem(id) {
 // Image Upload Functionality
 async function uploadImageToFirebase(file) {
     try {
+        // Check Firebase initialization
+        if (!firebase.apps.length) {
+            initializeFirebase();
+        }
+        
         // Create unique filename
         const timestamp = Date.now();
         const fileName = `portfolio/${timestamp}-${file.name}`;
