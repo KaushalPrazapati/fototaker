@@ -1,0 +1,25 @@
+{
+  "portfolio": [
+    {
+      "id": "1",
+      "title": "Wedding Photography",
+      "category": "wedding",
+      "image": "https://your-image-url-1.jpg",
+      "description": "Beautiful wedding moments"
+    },
+    {
+      "id": "2", 
+      "title": "Pre-Wedding Shoot",
+      "category": "pre-wedding",
+      "image": "https://your-image-url-2.jpg",
+      "description": "Romantic pre-wedding photos"
+    },
+    {
+      "id": "3",
+      "title": "Portrait Photography", 
+      "category": "portrait",
+      "image": "https://your-image-url-3.jpg",
+      "description": "Professional portrait sessions"
+    }
+  ]
+}
