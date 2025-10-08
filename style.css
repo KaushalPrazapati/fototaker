@@ -146,6 +146,10 @@ body {
     height: 40px !important;
     box-shadow: var(--shadow) !important;
     margin-left: 0.5rem !important;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .box-theme:hover {
@@ -157,6 +161,11 @@ body {
 
 .box-theme:hover i {
     color: white !important;
+}
+
+.box-theme i {
+    color: var(--text-dark);
+    transition: color 0.3s ease;
 }
 
 /* Navigation Menu with SMALL Box Buttons */
@@ -177,6 +186,9 @@ body {
     display: none;
     flex-direction: column;
     cursor: pointer;
+    background: none;
+    border: none;
+    padding: 5px;
 }
 
 .bar {
@@ -193,7 +205,7 @@ body {
     .nav-menu {
         position: fixed;
         left: -100%;
-        top: 60px;
+        top: 70px;
         flex-direction: column;
         background: var(--card-bg);
         width: 100%;
@@ -202,6 +214,7 @@ body {
         box-shadow: var(--shadow);
         padding: 1.5rem 0;
         gap: 0.8rem;
+        z-index: 999;
     }
 
     .nav-menu.active {
@@ -232,6 +245,18 @@ body {
 
     .nav-toggle {
         display: flex;
+    }
+
+    .nav-toggle.active .bar:nth-child(1) {
+        transform: rotate(-45deg) translate(-5px, 6px);
+    }
+
+    .nav-toggle.active .bar:nth-child(2) {
+        opacity: 0;
+    }
+
+    .nav-toggle.active .bar:nth-child(3) {
+        transform: rotate(45deg) translate(-5px, -6px);
     }
 }
 
@@ -792,6 +817,78 @@ html {
     }
 }
 
+/* Loading Animation */
+.loading {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-light);
+    font-size: 1.1rem;
+    grid-column: 1 / -1;
+}
+
+.loading::after {
+    content: '';
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0%, 100% { content: '.'; }
+    33% { content: '..'; }
+    66% { content: '...'; }
+}
+
+/* Notification Styles */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #27ae60;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    z-index: 10000;
+    max-width: 400px;
+    animation: slideInRight 0.3s ease;
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
 @media (max-width: 768px) {
     .service-cards {
         grid-template-columns: 1fr;
@@ -820,5 +917,16 @@ html {
     
     .portfolio-grid {
         grid-template-columns: 1fr;
+    }
+    
+    .hero-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .btn {
+        width: 200px;
+        text-align: center;
+        justify-content: center;
     }
 }
