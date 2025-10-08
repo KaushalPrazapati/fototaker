@@ -1,3 +1,19 @@
+// Firebase Import
+import { db, storage } from '../../firebase.js';
+import { 
+    collection, 
+    addDoc, 
+    updateDoc, 
+    deleteDoc, 
+    doc, 
+    getDocs 
+} from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js';
+import { 
+    ref, 
+    uploadBytes, 
+    getDownloadURL 
+} from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-storage.js';
+
 // Admin Login System
 document.addEventListener('DOMContentLoaded', function() {
     // Check if user is already logged in
@@ -15,22 +31,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             
-            // Simple authentication (in real app, use secure backend)
+            // Simple authentication
             if (username === 'admin' && password === 'password123') {
                 localStorage.setItem('adminLoggedIn', 'true');
                 window.location.href = 'admin-dashboard.html';
             } else {
                 alert('Invalid credentials! Try: admin / password123');
             }
-        });
-    }
-
-    // Logout Handler
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', function() {
-            localStorage.removeItem('adminLoggedIn');
-            window.location.href = 'admin-login.html';
         });
     }
 
@@ -52,6 +59,9 @@ function initAdminDashboard() {
     initNavigation();
     initPortfolioManagement();
     initModals();
+    
+    // Load portfolio items from Firebase
+    loadPortfolioFromFirebase();
 }
 
 // Navigation
@@ -79,14 +89,9 @@ function initNavigation() {
     });
 }
 
-// Portfolio Management
+// Portfolio Management with Firebase
 function initPortfolioManagement() {
     const addBtn = document.getElementById('addPortfolioBtn');
-    const portfolioForm = document.getElementById('portfolioForm');
-    const portfolioGrid = document.querySelector('.portfolio-grid-admin');
-    
-    // Load existing portfolio items
-    loadPortfolioItems();
     
     // Add new item button
     if (addBtn) {
@@ -100,15 +105,15 @@ function initPortfolioManagement() {
     if (portfolioFormElement) {
         portfolioFormElement.addEventListener('submit', function(e) {
             e.preventDefault();
-            savePortfolioItem();
+            savePortfolioItemToFirebase();
         });
     }
 }
 
+// Show Portfolio Form
 function showPortfolioForm(item = null) {
     const form = document.getElementById('portfolioForm');
     const formTitle = document.getElementById('formTitle');
-    const formElement = document.getElementById('portfolioItemForm');
     
     if (item) {
         // Edit mode
@@ -121,7 +126,7 @@ function showPortfolioForm(item = null) {
     } else {
         // Add mode
         formTitle.textContent = 'Add Portfolio Item';
-        formElement.reset();
+        document.getElementById('portfolioItemForm').reset();
         document.getElementById('itemId').value = '';
     }
     
@@ -133,108 +138,170 @@ function hidePortfolioForm() {
     document.getElementById('portfolioForm').style.display = 'none';
 }
 
-function savePortfolioItem() {
+// Save Portfolio Item to Firebase
+async function savePortfolioItemToFirebase() {
     const itemId = document.getElementById('itemId').value;
     const title = document.getElementById('itemTitle').value;
     const category = document.getElementById('itemCategory').value;
     const image = document.getElementById('itemImage').value;
     const description = document.getElementById('itemDescription').value;
     
-    // Get existing data
-    let portfolioData = JSON.parse(localStorage.getItem('portfolioData')) || [];
+    const submitBtn = document.querySelector('#portfolioItemForm button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
     
-    if (itemId) {
-        // Update existing
-        const index = portfolioData.findIndex(item => item.id == itemId);
-        if (index !== -1) {
-            portfolioData[index] = { id: itemId, title, category, image, description };
-        }
-    } else {
-        // Add new
-        const newItem = {
-            id: Date.now().toString(),
+    try {
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        submitBtn.disabled = true;
+        
+        const portfolioData = {
             title,
-            category, 
+            category,
             image,
-            description
+            description,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
         };
-        portfolioData.push(newItem);
-    }
-    
-    // Save to localStorage
-    localStorage.setItem('portfolioData', JSON.stringify(portfolioData));
-    
-    // ALSO SAVE TO JSON FILE (Manual step for now)
-    downloadPortfolioJSON(portfolioData);
-    
-    loadPortfolioItems();
-    hidePortfolioForm();
-    alert('Portfolio item saved! Download JSON file and upload to website.');
-}
-
-// Function to download JSON file
-function downloadPortfolioJSON(data) {
-    const jsonData = JSON.stringify({ portfolio: data }, null, 2);
-    const blob = new Blob([jsonData], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'portfolio-data.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
-
-function loadPortfolioItems() {
-    const portfolioGrid = document.querySelector('.portfolio-grid-admin');
-    const portfolioData = JSON.parse(localStorage.getItem('portfolioData')) || [];
-    
-    if (portfolioGrid) {
-        if (portfolioData.length === 0) {
-            portfolioGrid.innerHTML = '<p>No portfolio items yet. Click "Add New Item" to get started.</p>';
-            return;
+        
+        if (itemId) {
+            // Update existing item
+            const docRef = doc(db, 'portfolio', itemId);
+            await updateDoc(docRef, {
+                ...portfolioData,
+                updatedAt: new Date().toISOString()
+            });
+            showNotification('Portfolio item updated successfully!', 'success');
+        } else {
+            // Add new item
+            await addDoc(collection(db, 'portfolio'), portfolioData);
+            showNotification('Portfolio item added successfully!', 'success');
         }
         
-        portfolioGrid.innerHTML = portfolioData.map(item => `
-            <div class="portfolio-item-admin">
-                <img src="${item.image}" alt="${item.title}" onerror="this.src='https://picsum.photos/400/300?random=1'">
-                <div class="item-details">
-                    <h4>${item.title}</h4>
-                    <p><strong>Category:</strong> ${item.category}</p>
-                    <p>${item.description || 'No description'}</p>
-                    <div class="item-actions">
-                        <button class="btn btn-primary" onclick="editPortfolioItem('${item.id}')">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>
-                        <button class="btn btn-logout" onclick="deletePortfolioItem('${item.id}')">
-                            <i class="fas fa-trash"></i> Delete
-                        </button>
-                    </div>
+        // Reload portfolio items
+        loadPortfolioFromFirebase();
+        hidePortfolioForm();
+        
+    } catch (error) {
+        console.error('Error saving portfolio item:', error);
+        showNotification('Error saving portfolio item. Please try again.', 'error');
+    } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+}
+
+// Load Portfolio Items from Firebase
+async function loadPortfolioFromFirebase() {
+    const portfolioGrid = document.querySelector('.portfolio-grid-admin');
+    
+    if (!portfolioGrid) return;
+    
+    try {
+        const querySnapshot = await getDocs(collection(db, 'portfolio'));
+        const portfolioData = [];
+        
+        querySnapshot.forEach((doc) => {
+            portfolioData.push({
+                id: doc.id,
+                ...doc.data()
+            });
+        });
+        
+        // Sort by creation date (newest first)
+        portfolioData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        
+        displayPortfolioItemsAdmin(portfolioData);
+    } catch (error) {
+        console.error('Error loading portfolio:', error);
+        portfolioGrid.innerHTML = '<p>Error loading portfolio items. Please try again.</p>';
+    }
+}
+
+// Display Portfolio Items in Admin Panel
+function displayPortfolioItemsAdmin(items) {
+    const portfolioGrid = document.querySelector('.portfolio-grid-admin');
+    
+    if (items.length === 0) {
+        portfolioGrid.innerHTML = '<p>No portfolio items yet. Click "Add New Item" to get started.</p>';
+        return;
+    }
+    
+    portfolioGrid.innerHTML = items.map(item => `
+        <div class="portfolio-item-admin">
+            <img src="${item.image}" alt="${item.title}" 
+                 onerror="this.src='https://picsum.photos/400/300?random=1'">
+            <div class="item-details">
+                <h4>${item.title}</h4>
+                <p><strong>Category:</strong> ${item.category}</p>
+                <p>${item.description || 'No description'}</p>
+                <div class="item-actions">
+                    <button class="btn btn-primary" onclick="editPortfolioItem('${item.id}')">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="btn btn-logout" onclick="deletePortfolioItem('${item.id}')">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
                 </div>
             </div>
-        `).join('');
+        </div>
+    `).join('');
+}
+
+// Edit Portfolio Item
+async function editPortfolioItem(id) {
+    try {
+        const querySnapshot = await getDocs(collection(db, 'portfolio'));
+        let item = null;
+        
+        querySnapshot.forEach((doc) => {
+            if (doc.id === id) {
+                item = {
+                    id: doc.id,
+                    ...doc.data()
+                };
+            }
+        });
+        
+        if (item) {
+            showPortfolioForm(item);
+        }
+    } catch (error) {
+        console.error('Error loading item for edit:', error);
+        showNotification('Error loading item for editing.', 'error');
     }
 }
 
-function editPortfolioItem(id) {
-    const portfolioData = JSON.parse(localStorage.getItem('portfolioData')) || [];
-    const item = portfolioData.find(item => item.id === id);
-    
-    if (item) {
-        showPortfolioForm(item);
-    }
-}
-
-function deletePortfolioItem(id) {
+// Delete Portfolio Item
+async function deletePortfolioItem(id) {
     if (confirm('Are you sure you want to delete this item?')) {
-        let portfolioData = JSON.parse(localStorage.getItem('portfolioData')) || [];
-        portfolioData = portfolioData.filter(item => item.id !== id);
+        try {
+            await deleteDoc(doc(db, 'portfolio', id));
+            loadPortfolioFromFirebase();
+            showNotification('Item deleted successfully!', 'success');
+        } catch (error) {
+            console.error('Error deleting item:', error);
+            showNotification('Error deleting item. Please try again.', 'error');
+        }
+    }
+}
+
+// Image Upload Functionality
+async function uploadImageToFirebase(file) {
+    try {
+        // Create unique filename
+        const timestamp = Date.now();
+        const fileName = `portfolio/${timestamp}-${file.name}`;
+        const storageRef = ref(storage, fileName);
         
-        localStorage.setItem('portfolioData', JSON.stringify(portfolioData));
-        loadPortfolioItems();
+        // Upload file
+        const snapshot = await uploadBytes(storageRef, file);
         
-        alert('Item deleted successfully!');
+        // Get download URL
+        const downloadURL = await getDownloadURL(snapshot.ref);
+        
+        return downloadURL;
+    } catch (error) {
+        console.error('Error uploading image:', error);
+        throw error;
     }
 }
 
@@ -273,14 +340,32 @@ function initModals() {
     // Upload image button
     const uploadBtn = document.getElementById('uploadImageBtn');
     if (uploadBtn) {
-        uploadBtn.addEventListener('click', function() {
-            // In a real app, you would upload to a server
-            // For demo, we'll just use the data URL
-            const preview = document.getElementById('imagePreview').src;
-            if (preview) {
-                document.getElementById('itemImage').value = preview;
-                modal.style.display = 'none';
-                alert('Image uploaded! (Note: In real app, this would save to server)');
+        uploadBtn.addEventListener('click', async function() {
+            const fileInput = document.getElementById('imageFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select an image file first.');
+                return;
+            }
+            
+            try {
+                uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+                uploadBtn.disabled = true;
+                
+                const downloadURL = await uploadImageToFirebase(file);
+                
+                // Set the image URL in the form
+                document.getElementById('itemImage').value = downloadURL;
+                document.getElementById('imageUploadModal').style.display = 'none';
+                
+                showNotification('Image uploaded successfully!', 'success');
+            } catch (error) {
+                showNotification('Error uploading image. Please try again.', 'error');
+            } finally {
+                uploadBtn.innerHTML = 'Upload';
+                uploadBtn.disabled = false;
+                fileInput.value = '';
             }
         });
     }
@@ -290,7 +375,77 @@ function openImageUpload() {
     document.getElementById('imageUploadModal').style.display = 'block';
 }
 
-// Export portfolio data for main website
-function exportPortfolioData() {
-    return JSON.parse(localStorage.getItem('portfolioData')) || [];
+// Notification System
+function showNotification(message, type = 'info') {
+    // Remove existing notification
+    const existingNotification = document.querySelector('.notification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <span class="notification-message">${message}</span>
+            <button class="notification-close">&times;</button>
+        </div>
+    `;
+    
+    // Add styles
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#27ae60' : type === 'error' ? '#e74c3c' : '#3498db'};
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        z-index: 10000;
+        max-width: 400px;
+        animation: slideInRight 0.3s ease;
+    `;
+    
+    // Close button functionality
+    const closeBtn = notification.querySelector('.notification-close');
+    closeBtn.style.cssText = `
+        background: none;
+        border: none;
+        color: white;
+        font-size: 18px;
+        cursor: pointer;
+        margin-left: 10px;
+    `;
+    
+    closeBtn.addEventListener('click', () => {
+        notification.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+    });
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, 5000);
+    
+    document.body.appendChild(notification);
 }
+
+// Logout Handler
+const logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', function() {
+        localStorage.removeItem('adminLoggedIn');
+        window.location.href = 'admin-login.html';
+    });
+}
+
+// Make functions global for HTML onclick
+window.editPortfolioItem = editPortfolioItem;
+window.deletePortfolioItem = deletePortfolioItem;
+window.openImageUpload = openImageUpload;
+window.hidePortfolioForm = hidePortfolioForm;
