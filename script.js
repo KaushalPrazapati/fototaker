@@ -194,28 +194,7 @@ document.addEventListener('DOMContentLoaded', function() {
         serviceObserver.observe(card);
     });
     
-    // Portfolio animation
-    const portfolioItems = document.querySelectorAll('.portfolio-item');
-    const portfolioObserver = new IntersectionObserver((entries) => {
-        entries.forEach((entry, index) => {
-            if (entry.isIntersecting) {
-                setTimeout(() => {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'scale(1)';
-                }, index * 150);
-            }
-        });
-    }, {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    });
-    
-    portfolioItems.forEach(item => {
-        item.style.opacity = '0';
-        item.style.transform = 'scale(0.8)';
-        item.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
-        portfolioObserver.observe(item);
-    });
+    // Portfolio animation - REMOVED (will be handled by loadPortfolioFromFirebase)
     
     // Contact form
     const contactForm = document.querySelector('.contact-form');
@@ -274,14 +253,51 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set active link on page load
     updateActiveNavLink();
     
-    // Load admin portfolio data
-    loadPortfolioFromAdmin();
+    // Load portfolio from Firebase - YEH LINE CHANGE KARO
+    loadPortfolioFromFirebase();
     
     console.log('Website initialized successfully');
 });
 
-// Load portfolio data from JSON file
-async function loadPortfolioFromAdmin() {
+// Load portfolio data from Firebase - YEH NAYA FUNCTION
+async function loadPortfolioFromFirebase() {
+    const portfolioGrid = document.querySelector('.portfolio-grid');
+    
+    if (!portfolioGrid) return;
+    
+    try {
+        // Firebase import
+        const { db, collection, getDocs } = await import('./firebase.js');
+        
+        const querySnapshot = await getDocs(collection(db, 'portfolio'));
+        const portfolioData = [];
+        
+        querySnapshot.forEach((doc) => {
+            portfolioData.push({
+                id: doc.id,
+                ...doc.data()
+            });
+        });
+        
+        // Sort by creation date (newest first)
+        portfolioData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        
+        if (portfolioData.length > 0) {
+            displayPortfolioItems(portfolioData);
+            console.log('Portfolio loaded from Firebase - Items:', portfolioData.length);
+        } else {
+            // Fallback to JSON file if Firebase is empty
+            await loadPortfolioFromJSON();
+        }
+    } catch (error) {
+        console.log('Error loading from Firebase, trying JSON fallback:', error);
+        // Fallback to JSON file
+        await loadPortfolioFromJSON();
+    }
+}
+
+// Fallback function to load from JSON file
+async function loadPortfolioFromJSON() {
     const portfolioGrid = document.querySelector('.portfolio-grid');
     
     if (!portfolioGrid) return;
@@ -293,24 +309,13 @@ async function loadPortfolioFromAdmin() {
         if (response.ok) {
             const data = await response.json();
             displayPortfolioItems(data.portfolio);
+            console.log('Portfolio loaded from JSON file');
         } else {
-            // Fallback to localStorage
-            const localData = JSON.parse(localStorage.getItem('portfolioData'));
-            if (localData && localData.length > 0) {
-                displayPortfolioItems(localData);
-            } else {
-                // Fallback to default
-                displayDefaultPortfolio();
-            }
+            throw new Error('JSON file not found');
         }
     } catch (error) {
-        console.log('Using fallback portfolio data');
-        const localData = JSON.parse(localStorage.getItem('portfolioData'));
-        if (localData && localData.length > 0) {
-            displayPortfolioItems(localData);
-        } else {
-            displayDefaultPortfolio();
-        }
+        console.log('Using default portfolio data');
+        displayDefaultPortfolio();
     }
 }
 
@@ -330,6 +335,7 @@ function displayPortfolioItems(items) {
         </div>
     `).join('');
     
+    // Initialize animations for new items
     initPortfolioAnimations();
 }
 
@@ -364,7 +370,7 @@ function displayDefaultPortfolio() {
     initPortfolioAnimations();
 }
 
-// Initialize portfolio animations for dynamically loaded content
+// Initialize portfolio animations
 function initPortfolioAnimations() {
     const portfolioItems = document.querySelectorAll('.portfolio-item');
     const portfolioObserver = new IntersectionObserver((entries) => {
@@ -403,13 +409,11 @@ function getCategoryDisplayName(category) {
 
 // Notification system
 function showNotification(message, type = 'info') {
-    // Remove existing notification
     const existingNotification = document.querySelector('.notification');
     if (existingNotification) {
         existingNotification.remove();
     }
     
-    // Create notification element
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
     notification.innerHTML = `
@@ -419,7 +423,6 @@ function showNotification(message, type = 'info') {
         </div>
     `;
     
-    // Add styles
     notification.style.cssText = `
         position: fixed;
         top: 20px;
@@ -434,7 +437,6 @@ function showNotification(message, type = 'info') {
         animation: slideInRight 0.3s ease;
     `;
     
-    // Close button functionality
     const closeBtn = notification.querySelector('.notification-close');
     closeBtn.style.cssText = `
         background: none;
@@ -450,7 +452,6 @@ function showNotification(message, type = 'info') {
         setTimeout(() => notification.remove(), 300);
     });
     
-    // Auto remove after 5 seconds
     setTimeout(() => {
         if (notification.parentElement) {
             notification.style.animation = 'slideOutRight 0.3s ease';
@@ -516,7 +517,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('img').forEach(img => {
         img.onerror = function() {
             console.log('Image failed to load:', this.src);
-            // You can set a default placeholder image here
             if (!this.src.includes('picsum.photos')) {
                 this.src = 'https://picsum.photos/400/600?random=' + Math.floor(Math.random() * 100);
             }
