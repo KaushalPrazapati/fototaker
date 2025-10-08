@@ -279,32 +279,12 @@ async function loadPortfolioFromFirebase() {
             displayPortfolioItems(portfolioData);
             console.log('Portfolio loaded from Firebase - Items:', portfolioData.length);
         } else {
-            await loadPortfolioFromJSON();
+            // No data in Firebase, show default portfolio
+            displayDefaultPortfolio();
         }
     } catch (error) {
-        console.log('Error loading from Firebase, trying JSON fallback:', error);
-        await loadPortfolioFromJSON();
-    }
-}
-
-// Fallback function to load from JSON file
-async function loadPortfolioFromJSON() {
-    const portfolioGrid = document.querySelector('.portfolio-grid');
-    
-    if (!portfolioGrid) return;
-    
-    try {
-        const response = await fetch('./data/portfolio-data.json');
-        
-        if (response.ok) {
-            const data = await response.json();
-            displayPortfolioItems(data.portfolio);
-            console.log('Portfolio loaded from JSON file');
-        } else {
-            throw new Error('JSON file not found');
-        }
-    } catch (error) {
-        console.log('Using default portfolio data');
+        console.log('Error loading from Firebase:', error);
+        // Show default portfolio if Firebase fails
         displayDefaultPortfolio();
     }
 }
@@ -328,7 +308,7 @@ function displayPortfolioItems(items) {
     initPortfolioAnimations();
 }
 
-// Default portfolio
+// Default portfolio (when no Firebase data)
 function displayDefaultPortfolio() {
     const portfolioGrid = document.querySelector('.portfolio-grid');
     
@@ -352,6 +332,27 @@ function displayDefaultPortfolio() {
             <div class="portfolio-overlay">
                 <h3>Portrait Photography</h3>
                 <p>Professional portrait sessions</p>
+            </div>
+        </div>
+        <div class="portfolio-item">
+            <img src="https://picsum.photos/400/600?random=4" alt="Event Photography" class="portfolio-img">
+            <div class="portfolio-overlay">
+                <h3>Event Photography</h3>
+                <p>Capturing special occasions</p>
+            </div>
+        </div>
+        <div class="portfolio-item">
+            <img src="https://picsum.photos/400/600?random=5" alt="Drone Photography" class="portfolio-img">
+            <div class="portfolio-overlay">
+                <h3>Drone Photography</h3>
+                <p>Aerial views and perspectives</p>
+            </div>
+        </div>
+        <div class="portfolio-item">
+            <img src="https://picsum.photos/400/600?random=6" alt="Candid Photography" class="portfolio-img">
+            <div class="portfolio-overlay">
+                <h3>Candid Photography</h3>
+                <p>Natural and spontaneous moments</p>
             </div>
         </div>
     `;
