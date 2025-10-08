@@ -1,3 +1,68 @@
+// ImgBB Configuration - Your API Key
+const IMGBB_API_KEY = 'e473f5abe25409c5e97480f6a03bb992';
+
+// Upload to ImgBB (Free API)
+async function uploadToImgBB(file) {
+    try {
+        console.log('Uploading to ImgBB...', file.name);
+        
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            console.log('ImgBB Upload successful:', data.data.url);
+            return data.data.url;
+        } else {
+            throw new Error(data.error.message || 'ImgBB upload failed');
+        }
+    } catch (error) {
+        console.error('ImgBB upload error:', error);
+        throw new Error(`ImgBB Error: ${error.message}`);
+    }
+}
+
+// Main Upload Function (Only ImgBB)
+async function uploadImageToFirebase(file) {
+    try {
+        // Check if file is selected
+        if (!file) {
+            throw new Error('No file selected');
+        }
+
+        // Check file size (max 10MB - ImgBB allows 32MB but safe side)
+        if (file.size > 10 * 1024 * 1024) {
+            throw new Error('File size too large. Maximum 10MB allowed.');
+        }
+
+        // Check file type
+        if (!file.type.startsWith('image/')) {
+            throw new Error('Please select an image file (JPEG, PNG, GIF, etc.)');
+        }
+
+        console.log('Starting ImgBB upload for file:', file.name, 'Size:', file.size);
+
+        // Upload to ImgBB
+        const imageUrl = await uploadToImgBB(file);
+        
+        return imageUrl;
+        
+    } catch (error) {
+        console.error('Image upload failed:', error);
+        throw error;
+    }
+}
+
 // Admin Login System
 document.addEventListener('DOMContentLoaded', function() {
     // Check if user is already logged in
@@ -302,51 +367,6 @@ function openImageUpload() {
     }
 }
 
-// Image Upload to Firebase Storage
-async function uploadImageToFirebase(file) {
-    try {
-        // Check if file is selected
-        if (!file) {
-            throw new Error('No file selected');
-        }
-
-        // Check file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-            throw new Error('File size too large. Maximum 5MB allowed.');
-        }
-
-        // Check file type
-        if (!file.type.startsWith('image/')) {
-            throw new Error('Please select an image file');
-        }
-
-        console.log('Starting upload for file:', file.name, 'Size:', file.size);
-
-        // Create unique filename
-        const timestamp = Date.now();
-        const fileName = `portfolio/${timestamp}-${file.name}`;
-        const storageRef = firebase.storage().ref(fileName);
-        
-        // Upload file with metadata
-        const metadata = {
-            contentType: file.type
-        };
-        
-        console.log('Uploading to:', fileName);
-        const snapshot = await storageRef.put(file, metadata);
-        console.log('Upload completed, getting download URL...');
-        
-        // Get download URL
-        const downloadURL = await snapshot.ref.getDownloadURL();
-        console.log('Download URL:', downloadURL);
-        
-        return downloadURL;
-    } catch (error) {
-        console.error('Error uploading image:', error);
-        throw error;
-    }
-}
-
 // Modal Functions
 function initModals() {
     const modal = document.getElementById('imageUploadModal');
@@ -385,7 +405,7 @@ function initModals() {
         });
     }
     
-    // Upload image button
+    // Upload image button - ImgBB
     const uploadBtn = document.getElementById('uploadImageBtn');
     if (uploadBtn) {
         uploadBtn.addEventListener('click', async function() {
@@ -400,12 +420,12 @@ function initModals() {
             }
             
             try {
-                uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+                uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading to ImgBB...';
                 uploadBtn.disabled = true;
                 
-                console.log('Upload process started...');
+                console.log('ImgBB upload process started...');
                 const downloadURL = await uploadImageToFirebase(file);
-                console.log('Upload successful, URL:', downloadURL);
+                console.log('ImgBB upload successful, URL:', downloadURL);
                 
                 // Set the image URL in the form
                 const imageInput = document.getElementById('itemImage');
@@ -414,23 +434,25 @@ function initModals() {
                 }
                 
                 modal.style.display = 'none';
-                showNotification('Image uploaded successfully!', 'success');
+                showNotification('Image uploaded successfully to ImgBB!', 'success');
                 
             } catch (error) {
-                console.error('Upload failed:', error);
+                console.error('ImgBB upload failed:', error);
                 let errorMessage = 'Error uploading image. ';
                 
-                if (error.message.includes('permission') || error.message.includes('unauthorized')) {
-                    errorMessage += 'Please check Firebase Storage rules.';
-                } else if (error.message.includes('size')) {
-                    errorMessage += 'File too large. Maximum 5MB allowed.';
+                if (error.message.includes('size')) {
+                    errorMessage += 'File too large. Maximum 10MB allowed.';
+                } else if (error.message.includes('API key') || error.message.includes('401')) {
+                    errorMessage += 'Invalid ImgBB API key. Please check configuration.';
+                } else if (error.message.includes('network')) {
+                    errorMessage += 'Network error. Please check your connection.';
                 } else {
                     errorMessage += 'Please try again.';
                 }
                 
                 showNotification(errorMessage, 'error');
             } finally {
-                uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload Image';
+                uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload to ImgBB';
                 uploadBtn.disabled = false;
                 if (fileInput) fileInput.value = '';
                 const preview = document.getElementById('imagePreview');
