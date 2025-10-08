@@ -140,21 +140,21 @@ function savePortfolioItem() {
     const image = document.getElementById('itemImage').value;
     const description = document.getElementById('itemDescription').value;
     
-    // Get existing portfolio data
+    // Get existing data
     let portfolioData = JSON.parse(localStorage.getItem('portfolioData')) || [];
     
     if (itemId) {
-        // Update existing item
+        // Update existing
         const index = portfolioData.findIndex(item => item.id == itemId);
         if (index !== -1) {
             portfolioData[index] = { id: itemId, title, category, image, description };
         }
     } else {
-        // Add new item
+        // Add new
         const newItem = {
             id: Date.now().toString(),
             title,
-            category,
+            category, 
             image,
             description
         };
@@ -164,11 +164,26 @@ function savePortfolioItem() {
     // Save to localStorage
     localStorage.setItem('portfolioData', JSON.stringify(portfolioData));
     
-    // Reload portfolio items
+    // ALSO SAVE TO JSON FILE (Manual step for now)
+    downloadPortfolioJSON(portfolioData);
+    
     loadPortfolioItems();
     hidePortfolioForm();
-    
-    alert('Portfolio item saved successfully!');
+    alert('Portfolio item saved! Download JSON file and upload to website.');
+}
+
+// Function to download JSON file
+function downloadPortfolioJSON(data) {
+    const jsonData = JSON.stringify({ portfolio: data }, null, 2);
+    const blob = new Blob([jsonData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'portfolio-data.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 }
 
 function loadPortfolioItems() {
