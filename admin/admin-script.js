@@ -1,28 +1,5 @@
-// Firebase services import using CDN
-const { initializeApp } = firebase;
-const { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, getDocs } = firebase.firestore;
-const { getStorage, ref, uploadBytes, getDownloadURL } = firebase.storage;
-
-// Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyC-25CvcxzGmFuw3wRg-T9U-eKPuckFw0c",
-  authDomain: "fototaker-studio.firebaseapp.com",
-  projectId: "fototaker-studio",
-  storageBucket: "fototaker-studio.firebasestorage.app",
-  messagingSenderId: "401638389477",
-  appId: "1:401638389477:web:a8af16d0f9b49bf8dc460c",
-  measurementId: "G-W4NT35YBQJ"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const storage = getStorage(app);
-
 // Admin Login System
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Admin panel loaded');
-    
     // Check if user is already logged in
     if (localStorage.getItem('adminLoggedIn') === 'true' && 
         window.location.pathname.includes('admin-login.html')) {
@@ -37,8 +14,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            
-            console.log('Login attempt:', username);
             
             // Simple authentication
             if (username === 'admin' && password === 'password123') {
@@ -58,11 +33,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Admin Dashboard Functions
 function initAdminDashboard() {
-    console.log('Initializing admin dashboard');
-    
     // Check authentication
     if (localStorage.getItem('adminLoggedIn') !== 'true') {
-        alert('Please login first');
         window.location.href = 'admin-login.html';
         return;
     }
@@ -165,6 +137,7 @@ async function savePortfolioItemToFirebase() {
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
         submitBtn.disabled = true;
         
+        const db = firebase.firestore();
         const portfolioData = {
             title,
             category,
@@ -176,15 +149,15 @@ async function savePortfolioItemToFirebase() {
         
         if (itemId) {
             // Update existing item
-            const docRef = doc(db, 'portfolio', itemId);
-            await updateDoc(docRef, {
+            const docRef = db.collection('portfolio').doc(itemId);
+            await docRef.update({
                 ...portfolioData,
                 updatedAt: new Date().toISOString()
             });
             showNotification('Portfolio item updated successfully!', 'success');
         } else {
             // Add new item
-            await addDoc(collection(db, 'portfolio'), portfolioData);
+            await db.collection('portfolio').add(portfolioData);
             showNotification('Portfolio item added successfully!', 'success');
         }
         
@@ -208,7 +181,8 @@ async function loadPortfolioFromFirebase() {
     if (!portfolioGrid) return;
     
     try {
-        const querySnapshot = await getDocs(collection(db, 'portfolio'));
+        const db = firebase.firestore();
+        const querySnapshot = await db.collection('portfolio').get();
         const portfolioData = [];
         
         querySnapshot.forEach((doc) => {
@@ -261,7 +235,8 @@ function displayPortfolioItemsAdmin(items) {
 // Edit Portfolio Item
 async function editPortfolioItem(id) {
     try {
-        const querySnapshot = await getDocs(collection(db, 'portfolio'));
+        const db = firebase.firestore();
+        const querySnapshot = await db.collection('portfolio').get();
         let item = null;
         
         querySnapshot.forEach((doc) => {
@@ -286,7 +261,8 @@ async function editPortfolioItem(id) {
 async function deletePortfolioItem(id) {
     if (confirm('Are you sure you want to delete this item?')) {
         try {
-            await deleteDoc(doc(db, 'portfolio', id));
+            const db = firebase.firestore();
+            await db.collection('portfolio').doc(id).delete();
             loadPortfolioFromFirebase();
             showNotification('Item deleted successfully!', 'success');
         } catch (error) {
@@ -302,13 +278,13 @@ async function uploadImageToFirebase(file) {
         // Create unique filename
         const timestamp = Date.now();
         const fileName = `portfolio/${timestamp}-${file.name}`;
-        const storageRef = ref(storage, fileName);
+        const storageRef = firebase.storage().ref(fileName);
         
         // Upload file
-        const snapshot = await uploadBytes(storageRef, file);
+        const snapshot = await storageRef.put(file);
         
         // Get download URL
-        const downloadURL = await getDownloadURL(snapshot.ref);
+        const downloadURL = await snapshot.ref.getDownloadURL();
         
         return downloadURL;
     } catch (error) {
