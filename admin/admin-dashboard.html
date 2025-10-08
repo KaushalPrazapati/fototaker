@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - FotoTaker</title>
+    <link rel="stylesheet" href="admin-style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="admin-header">
+        <div class="header-content">
+            <h1>FotoTaker Admin Panel</h1>
+            <div class="admin-actions">
+                <span>Welcome, Admin</span>
+                <button id="logoutBtn" class="btn btn-logout">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <nav class="admin-sidebar">
+            <ul class="sidebar-menu">
+                <li><a href="#portfolio" class="active"><i class="fas fa-images"></i> Portfolio</a></li>
+                <li><a href="#services"><i class="fas fa-cogs"></i> Services</a></li>
+                <li><a href="#content"><i class="fas fa-edit"></i> Content</a></li>
+                <li><a href="#settings"><i class="fas fa-cog"></i> Settings</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="admin-main">
+            <!-- Portfolio Management -->
+            <section id="portfolio" class="admin-section active">
+                <div class="section-header">
+                    <h2>Portfolio Management</h2>
+                    <button id="addPortfolioBtn" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add New Item
+                    </button>
+                </div>
+
+                <!-- Add/Edit Portfolio Form -->
+                <div id="portfolioForm" class="form-container" style="display: none;">
+                    <h3 id="formTitle">Add Portfolio Item</h3>
+                    <form id="portfolioItemForm">
+                        <input type="hidden" id="itemId">
+                        <div class="form-group">
+                            <label>Title</label>
+                            <input type="text" id="itemTitle" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select id="itemCategory" required>
+                                <option value="">Select Category</option>
+                                <option value="wedding">Wedding Photography</option>
+                                <option value="pre-wedding">Pre-Wedding Shoots</option>
+                                <option value="portrait">Portrait Photography</option>
+                                <option value="events">Events</option>
+                                <option value="drone">Drone Shots</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Image URL</label>
+                            <div class="file-upload-group">
+                                <input type="text" id="itemImage" placeholder="Paste image URL">
+                                <button type="button" class="btn btn-secondary" onclick="openImageUpload()">
+                                    <i class="fas fa-upload"></i> Upload
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea id="itemDescription" rows="3"></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-success">Save Item</button>
+                            <button type="button" class="btn btn-secondary" onclick="hidePortfolioForm()">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Portfolio Items Grid -->
+                <div class="portfolio-grid-admin">
+                    <!-- Items will be loaded here dynamically -->
+                </div>
+            </section>
+
+            <!-- Services Management -->
+            <section id="services" class="admin-section">
+                <div class="section-header">
+                    <h2>Services Management</h2>
+                </div>
+                <div class="services-list">
+                    <!-- Services will be managed here -->
+                    <p>Services management coming soon...</p>
+                </div>
+            </section>
+
+            <!-- Content Management -->
+            <section id="content" class="admin-section">
+                <div class="section-header">
+                    <h2>Content Management</h2>
+                </div>
+                <div class="content-editor">
+                    <p>Content editor coming soon...</p>
+                </div>
+            </section>
+
+            <!-- Settings -->
+            <section id="settings" class="admin-section">
+                <div class="section-header">
+                    <h2>Settings</h2>
+                </div>
+                <div class="settings-content">
+                    <div class="form-group">
+                        <label>Admin Password</label>
+                        <input type="password" id="adminPassword" placeholder="Change password">
+                        <button class="btn btn-primary">Update Password</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Image Upload Modal -->
+    <div id="imageUploadModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Upload Image</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <input type="file" id="imageFile" accept="image/*">
+                <div class="upload-preview">
+                    <img id="imagePreview" src="" alt="Preview">
+                </div>
+                <button id="uploadImageBtn" class="btn btn-primary">Upload</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin-script.js"></script>
+</body>
+</html>
