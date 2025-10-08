@@ -280,54 +280,87 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Website initialized successfully');
 });
 
-// Load portfolio data from admin panel
-function loadPortfolioFromAdmin() {
-    const portfolioData = JSON.parse(localStorage.getItem('portfolioData'));
+// Load portfolio data from JSON file
+async function loadPortfolioFromAdmin() {
     const portfolioGrid = document.querySelector('.portfolio-grid');
     
     if (!portfolioGrid) return;
     
-    if (portfolioData && portfolioData.length > 0) {
-        // Use admin data
-        portfolioGrid.innerHTML = portfolioData.map(item => `
-            <div class="portfolio-item">
-                <img src="${item.image}" alt="${item.title}" class="portfolio-img" 
-                     onerror="this.src='https://picsum.photos/400/600?random=${Math.floor(Math.random() * 100)}'">
-                <div class="portfolio-overlay">
-                    <h3>${item.title}</h3>
-                    ${item.description ? `<p>${item.description}</p>` : ''}
-                    <small>Category: ${getCategoryDisplayName(item.category)}</small>
-                </div>
-            </div>
-        `).join('');
-    } else {
-        // Default portfolio items
-        portfolioGrid.innerHTML = `
-            <div class="portfolio-item">
-                <img src="https://picsum.photos/400/600?random=1" alt="Wedding Photography" class="portfolio-img">
-                <div class="portfolio-overlay">
-                    <h3>Wedding Photography</h3>
-                    <p>Beautiful moments from special days</p>
-                </div>
-            </div>
-            <div class="portfolio-item">
-                <img src="https://picsum.photos/400/600?random=2" alt="Pre-Wedding Shoots" class="portfolio-img">
-                <div class="portfolio-overlay">
-                    <h3>Pre-Wedding Shoots</h3>
-                    <p>Romantic couple photoshoots</p>
-                </div>
-            </div>
-            <div class="portfolio-item">
-                <img src="https://picsum.photos/400/600?random=3" alt="Portrait Photography" class="portfolio-img">
-                <div class="portfolio-overlay">
-                    <h3>Portrait Photography</h3>
-                    <p>Professional portrait sessions</p>
-                </div>
-            </div>
-        `;
+    try {
+        // Try to load from JSON file
+        const response = await fetch('./data/portfolio-data.json');
+        
+        if (response.ok) {
+            const data = await response.json();
+            displayPortfolioItems(data.portfolio);
+        } else {
+            // Fallback to localStorage
+            const localData = JSON.parse(localStorage.getItem('portfolioData'));
+            if (localData && localData.length > 0) {
+                displayPortfolioItems(localData);
+            } else {
+                // Fallback to default
+                displayDefaultPortfolio();
+            }
+        }
+    } catch (error) {
+        console.log('Using fallback portfolio data');
+        const localData = JSON.parse(localStorage.getItem('portfolioData'));
+        if (localData && localData.length > 0) {
+            displayPortfolioItems(localData);
+        } else {
+            displayDefaultPortfolio();
+        }
     }
+}
+
+// Display portfolio items
+function displayPortfolioItems(items) {
+    const portfolioGrid = document.querySelector('.portfolio-grid');
     
-    // Re-initialize animations for portfolio items
+    portfolioGrid.innerHTML = items.map(item => `
+        <div class="portfolio-item">
+            <img src="${item.image}" alt="${item.title}" class="portfolio-img" 
+                 onerror="this.src='https://picsum.photos/400/600?random=${Math.floor(Math.random() * 100)}'">
+            <div class="portfolio-overlay">
+                <h3>${item.title}</h3>
+                ${item.description ? `<p>${item.description}</p>` : ''}
+                <small>Category: ${getCategoryDisplayName(item.category)}</small>
+            </div>
+        </div>
+    `).join('');
+    
+    initPortfolioAnimations();
+}
+
+// Default portfolio
+function displayDefaultPortfolio() {
+    const portfolioGrid = document.querySelector('.portfolio-grid');
+    
+    portfolioGrid.innerHTML = `
+        <div class="portfolio-item">
+            <img src="https://picsum.photos/400/600?random=1" alt="Wedding Photography" class="portfolio-img">
+            <div class="portfolio-overlay">
+                <h3>Wedding Photography</h3>
+                <p>Beautiful moments from special days</p>
+            </div>
+        </div>
+        <div class="portfolio-item">
+            <img src="https://picsum.photos/400/600?random=2" alt="Pre-Wedding Shoots" class="portfolio-img">
+            <div class="portfolio-overlay">
+                <h3>Pre-Wedding Shoots</h3>
+                <p>Romantic couple photoshoots</p>
+            </div>
+        </div>
+        <div class="portfolio-item">
+            <img src="https://picsum.photos/400/600?random=3" alt="Portrait Photography" class="portfolio-img">
+            <div class="portfolio-overlay">
+                <h3>Portrait Photography</h3>
+                <p>Professional portrait sessions</p>
+            </div>
+        </div>
+    `;
+    
     initPortfolioAnimations();
 }
 
