@@ -253,7 +253,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Website initialized successfully');
 });
 
-// Load portfolio data from Firebase - SIMPLE VERSION
+// Load portfolio data from Firebase
 async function loadPortfolioFromFirebase() {
     const portfolioGrid = document.querySelector('.portfolio-grid');
     
@@ -451,77 +451,3 @@ function showNotification(message, type = 'info') {
     
     document.body.appendChild(notification);
 }
-
-// Add CSS animations for notifications
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideInRight {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-    
-    @keyframes slideOutRight {
-        from {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        to {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-    }
-    
-    .notification-content {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-`;
-document.head.appendChild(style);
-
-// WhatsApp integration
-document.addEventListener('DOMContentLoaded', function() {
-    const whatsappLinks = document.querySelectorAll('a[href*="wa.me"], .fa-whatsapp');
-    
-    whatsappLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            if (this.href.includes('wa.me')) {
-                e.preventDefault();
-                const phoneNumber = '919471640485';
-                const message = 'Hello! I visited your website and would like to know more about your photography services.';
-                const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-                window.open(whatsappURL, '_blank');
-            }
-        });
-    });
-});
-
-// Handle image errors gracefully
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('img').forEach(img => {
-        img.onerror = function() {
-            console.log('Image failed to load:', this.src);
-            if (!this.src.includes('picsum.photos')) {
-                this.src = 'https://picsum.photos/400/600?random=' + Math.floor(Math.random() * 100);
-            }
-        };
-    });
-});
-
-// Handle page errors
-window.addEventListener('error', function(e) {
-    console.error('Page error:', e.error);
-});
-
-// Make body visible after loading
-document.addEventListener('DOMContentLoaded', function() {
-    document.body.style.visibility = 'visible';
-});
-
-
