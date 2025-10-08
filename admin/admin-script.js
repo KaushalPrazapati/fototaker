@@ -99,6 +99,8 @@ function showPortfolioForm(item = null) {
     const form = document.getElementById('portfolioForm');
     const formTitle = document.getElementById('formTitle');
     
+    if (!form || !formTitle) return;
+    
     if (item) {
         // Edit mode
         formTitle.textContent = 'Edit Portfolio Item';
@@ -119,7 +121,10 @@ function showPortfolioForm(item = null) {
 }
 
 function hidePortfolioForm() {
-    document.getElementById('portfolioForm').style.display = 'none';
+    const form = document.getElementById('portfolioForm');
+    if (form) {
+        form.style.display = 'none';
+    }
 }
 
 // Save Portfolio Item to Firebase
@@ -131,6 +136,8 @@ async function savePortfolioItemToFirebase() {
     const description = document.getElementById('itemDescription').value;
     
     const submitBtn = document.querySelector('#portfolioItemForm button[type="submit"]');
+    if (!submitBtn) return;
+    
     const originalText = submitBtn.innerHTML;
     
     try {
@@ -206,6 +213,8 @@ async function loadPortfolioFromFirebase() {
 function displayPortfolioItemsAdmin(items) {
     const portfolioGrid = document.querySelector('.portfolio-grid-admin');
     
+    if (!portfolioGrid) return;
+    
     if (items.length === 0) {
         portfolioGrid.innerHTML = `
             <div style="text-align: center; padding: 3rem; color: #666;">
@@ -274,15 +283,18 @@ async function deletePortfolioItem(id) {
     }
 }
 
-// Direct Image URL Input (No File Upload)
+// Direct Image URL Input
 function openImageUpload() {
-    const currentUrl = document.getElementById('itemImage').value;
+    const imageInput = document.getElementById('itemImage');
+    if (!imageInput) return;
+    
+    const currentUrl = imageInput.value;
     const imageUrl = prompt('Paste your image URL here:', currentUrl || '');
     
     if (imageUrl) {
         // Basic URL validation
         if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-            document.getElementById('itemImage').value = imageUrl;
+            imageInput.value = imageUrl;
             showNotification('Image URL added successfully!', 'success');
         } else {
             showNotification('Please enter a valid URL starting with http:// or https://', 'error');
@@ -378,6 +390,8 @@ function initModals() {
     if (uploadBtn) {
         uploadBtn.addEventListener('click', async function() {
             const fileInput = document.getElementById('imageFile');
+            if (!fileInput) return;
+            
             const file = fileInput.files[0];
             
             if (!file) {
@@ -394,9 +408,12 @@ function initModals() {
                 console.log('Upload successful, URL:', downloadURL);
                 
                 // Set the image URL in the form
-                document.getElementById('itemImage').value = downloadURL;
-                document.getElementById('imageUploadModal').style.display = 'none';
+                const imageInput = document.getElementById('itemImage');
+                if (imageInput) {
+                    imageInput.value = downloadURL;
+                }
                 
+                modal.style.display = 'none';
                 showNotification('Image uploaded successfully!', 'success');
                 
             } catch (error) {
@@ -413,7 +430,7 @@ function initModals() {
                 
                 showNotification(errorMessage, 'error');
             } finally {
-                uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload';
+                uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload Image';
                 uploadBtn.disabled = false;
                 if (fileInput) fileInput.value = '';
                 const preview = document.getElementById('imagePreview');
