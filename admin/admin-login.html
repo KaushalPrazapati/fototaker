@@ -6,6 +6,11 @@
     <title>Admin Login - FotoTaker</title>
     <link rel="stylesheet" href="admin-style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 </head>
 <body>
     <div class="login-container">
@@ -30,6 +35,24 @@
             </div>
         </div>
     </div>
+
+    <!-- Firebase Configuration -->
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyC-25CvcxzGmFuw3wRg-T9U-eKPuckFw0c",
+            authDomain: "fototaker-studio.firebaseapp.com",
+            projectId: "fototaker-studio",
+            storageBucket: "fototaker-studio.firebasestorage.app",
+            messagingSenderId: "401638389477",
+            appId: "1:401638389477:web:a8af16d0f9b49bf8dc460c",
+            measurementId: "G-W4NT35YBQJ"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+    </script>
+
     <script src="admin-script.js"></script>
 </body>
 </html>
