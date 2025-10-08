@@ -8,7 +8,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
-    <script src="./firebase-config.js"></script>
 
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-512GD0Y9L4"></script>
@@ -45,9 +44,7 @@
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-logo">
-                <!-- Logo Image - apna actual logo file use karo -->
                 <img src="logo.jpg" alt="FotoTaker Logo" class="logo-img">
-                <!-- Temporary text logo -->
                 <h2 class="logo-text">FotoTaker</h2>
             </div>
             <div class="nav-menu" id="navMenu">
@@ -56,7 +53,6 @@
                 <a href="#services" class="nav-link box-link">Services</a>
                 <a href="#about" class="nav-link box-link">About</a>
                 <a href="#contact" class="nav-link box-link">Contact</a>
-                <!-- Theme Toggle in Navbar -->
                 <button id="themeToggle" class="nav-theme-btn box-theme">
                     <i class="fas fa-moon"></i>
                 </button>
@@ -86,25 +82,9 @@
     <section id="portfolio" class="portfolio">
         <div class="container">
             <h2 class="section-title">Our Portfolio</h2>
-            <div class="portfolio-grid">
-                <div class="portfolio-item">
-                    <img src="https://picsum.photos/400/600?random=1" alt="Wedding Photography" class="portfolio-img">
-                    <div class="portfolio-overlay">
-                        <h3>Wedding Photography</h3>
-                    </div>
-                </div>
-                <div class="portfolio-item">
-                    <img src="https://picsum.photos/400/600?random=2" alt="Pre-Wedding Shoots" class="portfolio-img">
-                    <div class="portfolio-overlay">
-                        <h3>Pre-Wedding Shoots</h3>
-                    </div>
-                </div>
-                <div class="portfolio-item">
-                    <img src="https://picsum.photos/400/600?random=3" alt="Portrait Photography" class="portfolio-img">
-                    <div class="portfolio-overlay">
-                        <h3>Portrait Photography</h3>
-                    </div>
-                </div>
+            <div class="portfolio-grid" id="portfolioGrid">
+                <!-- Portfolio items will be loaded from Firebase -->
+                <div class="loading">Loading portfolio...</div>
             </div>
         </div>
     </section>
@@ -288,7 +268,7 @@
                     </div>
                 </div>
                 <div class="about-image">
-                    <img src="https://picsum.photos/400/500?random=4" alt="FotoTaker Team">
+                    <img src="about.jpg" alt="FotoTaker Team" class="about-img">
                 </div>
             </div>
         </div>
@@ -354,7 +334,7 @@
                 <a href="https://wa.me/919471640485" target="_blank" class="social-link">
                     <i class="fab fa-whatsapp"></i>
                 </a>
-                <a href="https://youtube.com/fototaker" target="_blank" class="social-link">
+                <a href="https://youtube.com/fototakerkd" target="_blank" class="social-link">
                     <i class="fab fa-youtube"></i>
                 </a>
             </div>
@@ -362,12 +342,23 @@
         </div>
     </footer>
 
+    <!-- Firebase Configuration -->
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyC-25CvcxzGmFuw3wRg-T9U-eKPuckFw0c",
+            authDomain: "fototaker-studio.firebaseapp.com",
+            projectId: "fototaker-studio",
+            storageBucket: "fototaker-studio.firebasestorage.app",
+            messagingSenderId: "401638389477",
+            appId: "1:401638389477:web:a8af16d0f9b49bf8dc460c",
+            measurementId: "G-W4NT35YBQJ"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+    </script>
+
     <script src="script.js"></script>
 </body>
-
 </html>
-
-
-
-
-
