@@ -1,8 +1,23 @@
 // Simple and Fixed Theme Toggle
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded - initializing theme');
+    console.log('DOM loaded - initializing website');
     
-    // Theme elements
+    // Initialize all systems
+    initTheme();
+    initNavigation();
+    initPortfolioAnimations();
+    initServiceAnimations();
+    initBookingSystem();
+    initContactForm();
+    
+    // Load portfolio from Firebase
+    loadPortfolioFromFirebase();
+    
+    console.log('Website initialized successfully');
+});
+
+// Theme Management
+function initTheme() {
     const themeToggle = document.getElementById('themeToggle');
     const body = document.body;
     
@@ -87,11 +102,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Scroll event for navbar
     window.addEventListener('scroll', updateNavbarBackground);
-    
-    // Mobile Navigation
+}
+
+// Navigation Management
+function initNavigation() {
     const navToggle = document.getElementById('navToggle');
     const navMenu = document.getElementById('navMenu');
     
+    // Mobile navigation toggle
     if (navToggle && navMenu) {
         navToggle.addEventListener('click', function() {
             navMenu.classList.toggle('active');
@@ -157,83 +175,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update active nav link on scroll
     window.addEventListener('scroll', updateActiveNavLink);
     
-    // Hero button scroll
-    document.querySelectorAll('.btn-primary[href="#portfolio"]').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const portfolio = document.querySelector('#portfolio');
-            if (portfolio) {
-                portfolio.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
-        });
-    });
-    
-    // Service cards animation
-    const serviceCards = document.querySelectorAll('.service-card');
-    const serviceObserver = new IntersectionObserver((entries) => {
-        entries.forEach((entry, index) => {
-            if (entry.isIntersecting) {
-                setTimeout(() => {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }, index * 100);
-            }
-        });
-    }, {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    });
-    
-    serviceCards.forEach(card => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(30px)';
-        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-        serviceObserver.observe(card);
-    });
-    
-    // Contact form
-    const contactForm = document.querySelector('.contact-form');
-    if (contactForm) {
-        contactForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const name = this.querySelector('input[type="text"]').value;
-            const email = this.querySelector('input[type="email"]').value;
-            const phone = this.querySelector('input[type="tel"]').value;
-            const message = this.querySelector('textarea').value;
-            
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-            submitBtn.disabled = true;
-            
-            // Simulate API call
-            setTimeout(() => {
-                const formData = {
-                    name,
-                    email,
-                    phone,
-                    message,
-                    timestamp: new Date().toISOString()
-                };
-                
-                let existingData = JSON.parse(localStorage.getItem('contactSubmissions')) || [];
-                existingData.push(formData);
-                localStorage.setItem('contactSubmissions', JSON.stringify(existingData));
-                
-                showNotification(`Thank you ${name}! We have received your message and will contact you soon.`, 'success');
-                
-                this.reset();
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-            }, 2000);
-        });
-    }
-    
     // Close mobile menu when clicking outside
     document.addEventListener('click', function(e) {
         if (navMenu && navToggle && 
@@ -246,14 +187,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Set active link on page load
     updateActiveNavLink();
-    
-    // Load portfolio from Firebase
-    loadPortfolioFromFirebase();
-    
-    console.log('Website initialized successfully');
-});
+}
 
-// Load portfolio data from Firebase
+// Portfolio System
 async function loadPortfolioFromFirebase() {
     const portfolioGrid = document.querySelector('.portfolio-grid');
     
@@ -300,7 +236,7 @@ function displayPortfolioItems(items) {
             <div class="portfolio-overlay">
                 <h3>${item.title}</h3>
                 ${item.description ? `<p>${item.description}</p>` : ''}
-                <small>Category: ${getCategoryDisplayName(item.category)}</small>
+                <small>${getCategoryDisplayName(item.category)}</small>
             </div>
         </div>
     `).join('');
@@ -385,6 +321,220 @@ function initPortfolioAnimations() {
     });
 }
 
+// Service animations
+function initServiceAnimations() {
+    const serviceCards = document.querySelectorAll('.service-card');
+    const serviceObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry, index) => {
+            if (entry.isIntersecting) {
+                setTimeout(() => {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }, index * 100);
+            }
+        });
+    }, {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    });
+    
+    serviceCards.forEach(card => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        serviceObserver.observe(card);
+    });
+}
+
+// Booking System
+function initBookingSystem() {
+    const bookingForm = document.getElementById('bookingForm');
+    
+    if (bookingForm) {
+        bookingForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Get form data
+            const formData = {
+                name: document.getElementById('name').value,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('email').value,
+                serviceType: document.getElementById('serviceType').value,
+                eventDate: document.getElementById('eventDate').value,
+                location: document.getElementById('location').value,
+                message: document.getElementById('message').value,
+                timestamp: new Date().toISOString(),
+                status: 'pending'
+            };
+            
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            
+            try {
+                // Show loading
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending Request...';
+                submitBtn.disabled = true;
+                
+                // Save to Firebase
+                await saveBookingToFirebase(formData);
+                
+                // Send WhatsApp notification
+                sendWhatsAppBookingNotification(formData);
+                
+                // Show success message
+                showNotification(`Thank you ${formData.name}! Your ${getServiceDisplayName(formData.serviceType)} request has been sent. We'll contact you within 2 hours.`, 'success');
+                
+                // Reset form
+                this.reset();
+                
+            } catch (error) {
+                console.error('Booking error:', error);
+                showNotification('Error sending booking request. Please try again or contact us directly via WhatsApp.', 'error');
+            } finally {
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Booking Request';
+                submitBtn.disabled = false;
+            }
+        });
+    }
+}
+
+// Save booking to Firebase
+async function saveBookingToFirebase(bookingData) {
+    try {
+        const db = firebase.firestore();
+        await db.collection('bookings').add(bookingData);
+        console.log('Booking saved to Firebase');
+    } catch (error) {
+        console.error('Error saving booking:', error);
+        throw error;
+    }
+}
+
+// Contact Form Handler
+function initContactForm() {
+    const contactForm = document.getElementById('contactForm');
+    
+    if (contactForm) {
+        contactForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = this.querySelector('input[name="name"]').value;
+            const email = this.querySelector('input[name="email"]').value;
+            const phone = this.querySelector('input[name="phone"]').value;
+            const message = this.querySelector('textarea[name="message"]').value;
+            
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            submitBtn.disabled = true;
+            
+            // Simulate form submission
+            setTimeout(() => {
+                const formData = {
+                    name,
+                    email,
+                    phone,
+                    message,
+                    timestamp: new Date().toISOString()
+                };
+                
+                // Save to localStorage for demo
+                let existingData = JSON.parse(localStorage.getItem('contactSubmissions')) || [];
+                existingData.push(formData);
+                localStorage.setItem('contactSubmissions', JSON.stringify(existingData));
+                
+                showNotification(`Thank you ${name}! Your message has been sent successfully.`, 'success');
+                
+                this.reset();
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }, 2000);
+        });
+    }
+}
+
+// WhatsApp integration
+function openWhatsApp(prefilledMessage = '') {
+    const phone = '919471640485';
+    const message = prefilledMessage || 'Hello! I want to book photography/videography services';
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+}
+
+// Scroll to booking with pre-selected service
+function scrollToBooking(serviceType) {
+    const bookingSection = document.getElementById('booking');
+    const serviceSelect = document.getElementById('serviceType');
+    
+    if (bookingSection && serviceSelect) {
+        serviceSelect.value = serviceType;
+        bookingSection.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }
+}
+
+// Send WhatsApp notification for booking
+function sendWhatsAppBookingNotification(bookingData) {
+    const phone = '919471640485';
+    const serviceName = getServiceDisplayName(bookingData.serviceType);
+    
+    const message = `📸 NEW BOOKING REQUEST - ${serviceName.toUpperCase()}
+
+👤 Client: ${bookingData.name}
+📞 Phone: ${bookingData.phone}
+📧 Email: ${bookingData.email || 'Not provided'}
+
+🎯 Service: ${serviceName}
+📅 Date: ${bookingData.eventDate || 'Not specified'}
+📍 Location: ${bookingData.location || 'Not specified'}
+
+📝 Requirements:
+${bookingData.message || 'No additional details'}
+
+⏰ Received: ${new Date().toLocaleString()}
+🌐 Source: Website Booking Form`;
+
+    const whatsappURL = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    
+    // Open WhatsApp in new tab
+    window.open(whatsappURL, '_blank');
+}
+
+// Helper function to get service display name
+function getServiceDisplayName(serviceKey) {
+    const serviceNames = {
+        'wedding-photography': 'Wedding Photography',
+        'wedding-videography': 'Wedding Videography', 
+        'wedding-combo': 'Wedding Photo+Video Combo',
+        'pre-wedding-shoot': 'Pre-Wedding Shoot',
+        'birthday-photography': 'Birthday Photography',
+        'anniversary-shoot': 'Anniversary Shoot',
+        'corporate-event': 'Corporate Event Coverage',
+        'baby-shower': 'Baby Shower Photography',
+        'engagement': 'Engagement Ceremony',
+        'family-portrait': 'Family Portrait',
+        'couple-shoot': 'Couple Shoot',
+        'maternity-shoot': 'Maternity Photography',
+        'newborn-photography': 'Newborn Photography',
+        'professional-portfolio': 'Professional Portfolio',
+        'drone-photography': 'Drone Photography',
+        'aerial-videography': 'Aerial Videography',
+        'commercial-photography': 'Commercial Photography',
+        'product-photography': 'Product Photography',
+        'real-estate-photography': 'Real Estate Photography',
+        'video-editing': 'Video Editing',
+        'photo-editing': 'Photo Editing',
+        'album-design': 'Photo Album Design',
+        'cinematic-video': 'Cinematic Video Making',
+        'other': 'Photography Service'
+    };
+    
+    return serviceNames[serviceKey] || 'Photography Service';
+}
+
 // Helper function to get category display name
 function getCategoryDisplayName(category) {
     const categoryMap = {
@@ -417,7 +567,7 @@ function showNotification(message, type = 'info') {
         position: fixed;
         top: 20px;
         right: 20px;
-        background: ${type === 'success' ? '#27ae60' : '#3498db'};
+        background: ${type === 'success' ? '#27ae60' : type === 'error' ? '#e74c3c' : '#3498db'};
         color: white;
         padding: 15px 20px;
         border-radius: 8px;
@@ -451,3 +601,20 @@ function showNotification(message, type = 'info') {
     
     document.body.appendChild(notification);
 }
+
+// Handle image errors gracefully
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('img').forEach(img => {
+        img.onerror = function() {
+            console.log('Image failed to load:', this.src);
+            if (!this.src.includes('picsum.photos')) {
+                this.src = 'https://picsum.photos/400/600?random=' + Math.floor(Math.random() * 100);
+            }
+        };
+    });
+});
+
+// Make body visible after loading
+document.addEventListener('DOMContentLoaded', function() {
+    document.body.style.visibility = 'visible';
+});
