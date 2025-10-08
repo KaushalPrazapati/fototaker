@@ -1,39 +1,9 @@
-// Firebase Configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyC-25CvcxzGmFuw3wRg-T9U-eKPuckFw0c",
-    authDomain: "fototaker-studio.firebaseapp.com",
-    projectId: "fototaker-studio",
-    storageBucket: "fototaker-studio.firebasestorage.app",
-    messagingSenderId: "401638389477",
-    appId: "1:401638389477:web:a8af16d0f9b49bf8dc460c",
-    measurementId: "G-W4NT35YBQJ"
-};
-
-// Initialize Firebase
-function initializeFirebase() {
-    try {
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-            console.log("✅ Firebase initialized successfully");
-            return true;
-        } else {
-            console.log("ℹ️ Firebase already initialized");
-            return true;
-        }
-    } catch (error) {
-        console.error("❌ Firebase initialization error:", error);
-        showNotification('Firebase initialization failed!', 'error');
-        return false;
-    }
-}
-
 // Admin Login System
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Firebase first
-    const firebaseInitialized = initializeFirebase();
-    
-    if (!firebaseInitialized) {
-        console.error("Firebase initialization failed!");
+    // Check if Firebase is already initialized
+    if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+        console.error("Firebase not initialized properly");
+        showNotification('Firebase initialization error!', 'error');
         return;
     }
 
@@ -73,6 +43,13 @@ function initAdminDashboard() {
     // Check authentication
     if (localStorage.getItem('adminLoggedIn') !== 'true') {
         window.location.href = 'admin-login.html';
+        return;
+    }
+
+    // Check Firebase initialization
+    if (typeof firebase === 'undefined' || !firebase.apps.length) {
+        console.error("Firebase not available");
+        showNotification('Firebase not initialized!', 'error');
         return;
     }
 
@@ -174,11 +151,6 @@ async function savePortfolioItemToFirebase() {
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
         submitBtn.disabled = true;
         
-        // Check Firebase initialization
-        if (!firebase.apps.length) {
-            initializeFirebase();
-        }
-        
         const db = firebase.firestore();
         const portfolioData = {
             title,
@@ -223,11 +195,6 @@ async function loadPortfolioFromFirebase() {
     if (!portfolioGrid) return;
     
     try {
-        // Check Firebase initialization
-        if (!firebase.apps.length) {
-            initializeFirebase();
-        }
-        
         const db = firebase.firestore();
         const querySnapshot = await db.collection('portfolio').get();
         const portfolioData = [];
@@ -282,11 +249,6 @@ function displayPortfolioItemsAdmin(items) {
 // Edit Portfolio Item
 async function editPortfolioItem(id) {
     try {
-        // Check Firebase initialization
-        if (!firebase.apps.length) {
-            initializeFirebase();
-        }
-        
         const db = firebase.firestore();
         const doc = await db.collection('portfolio').doc(id).get();
         
@@ -309,11 +271,6 @@ async function editPortfolioItem(id) {
 async function deletePortfolioItem(id) {
     if (confirm('Are you sure you want to delete this item?')) {
         try {
-            // Check Firebase initialization
-            if (!firebase.apps.length) {
-                initializeFirebase();
-            }
-            
             const db = firebase.firestore();
             await db.collection('portfolio').doc(id).delete();
             loadPortfolioFromFirebase();
@@ -328,11 +285,6 @@ async function deletePortfolioItem(id) {
 // Image Upload Functionality
 async function uploadImageToFirebase(file) {
     try {
-        // Check Firebase initialization
-        if (!firebase.apps.length) {
-            initializeFirebase();
-        }
-        
         // Create unique filename
         const timestamp = Date.now();
         const fileName = `portfolio/${timestamp}-${file.name}`;
@@ -377,6 +329,7 @@ function initModals() {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     document.getElementById('imagePreview').src = e.target.result;
+                    document.getElementById('imagePreview').style.display = 'block';
                 };
                 reader.readAsDataURL(file);
             }
@@ -412,6 +365,7 @@ function initModals() {
                 uploadBtn.innerHTML = 'Upload';
                 uploadBtn.disabled = false;
                 fileInput.value = '';
+                document.getElementById('imagePreview').style.display = 'none';
             }
         });
     }
