@@ -1,12 +1,5 @@
 // Admin Login System
 document.addEventListener('DOMContentLoaded', function() {
-    // Check if Firebase is already initialized
-    if (typeof firebase !== 'undefined' && !firebase.apps.length) {
-        console.error("Firebase not initialized properly");
-        showNotification('Firebase initialization error!', 'error');
-        return;
-    }
-
     // Check if user is already logged in
     if (localStorage.getItem('adminLoggedIn') === 'true' && 
         window.location.pathname.includes('admin-login.html')) {
@@ -43,13 +36,6 @@ function initAdminDashboard() {
     // Check authentication
     if (localStorage.getItem('adminLoggedIn') !== 'true') {
         window.location.href = 'admin-login.html';
-        return;
-    }
-
-    // Check Firebase initialization
-    if (typeof firebase === 'undefined' || !firebase.apps.length) {
-        console.error("Firebase not available");
-        showNotification('Firebase not initialized!', 'error');
         return;
     }
 
@@ -183,7 +169,7 @@ async function savePortfolioItemToFirebase() {
         console.error('Error saving portfolio item:', error);
         showNotification('Error saving portfolio item. Please try again.', 'error');
     } finally {
-        submitBtn.innerHTML = originalText;
+        submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Item';
         submitBtn.disabled = false;
     }
 }
@@ -221,7 +207,13 @@ function displayPortfolioItemsAdmin(items) {
     const portfolioGrid = document.querySelector('.portfolio-grid-admin');
     
     if (items.length === 0) {
-        portfolioGrid.innerHTML = '<p>No portfolio items yet. Click "Add New Item" to get started.</p>';
+        portfolioGrid.innerHTML = `
+            <div style="text-align: center; padding: 3rem; color: #666;">
+                <i class="fas fa-images" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                <h3>No portfolio items yet</h3>
+                <p>Click "Add New Item" to get started</p>
+            </div>
+        `;
         return;
     }
     
@@ -282,19 +274,59 @@ async function deletePortfolioItem(id) {
     }
 }
 
-// Image Upload Functionality
+// Direct Image URL Input (No File Upload)
+function openImageUpload() {
+    const currentUrl = document.getElementById('itemImage').value;
+    const imageUrl = prompt('Paste your image URL here:', currentUrl || '');
+    
+    if (imageUrl) {
+        // Basic URL validation
+        if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+            document.getElementById('itemImage').value = imageUrl;
+            showNotification('Image URL added successfully!', 'success');
+        } else {
+            showNotification('Please enter a valid URL starting with http:// or https://', 'error');
+        }
+    }
+}
+
+// Image Upload to Firebase Storage
 async function uploadImageToFirebase(file) {
     try {
+        // Check if file is selected
+        if (!file) {
+            throw new Error('No file selected');
+        }
+
+        // Check file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            throw new Error('File size too large. Maximum 5MB allowed.');
+        }
+
+        // Check file type
+        if (!file.type.startsWith('image/')) {
+            throw new Error('Please select an image file');
+        }
+
+        console.log('Starting upload for file:', file.name, 'Size:', file.size);
+
         // Create unique filename
         const timestamp = Date.now();
         const fileName = `portfolio/${timestamp}-${file.name}`;
         const storageRef = firebase.storage().ref(fileName);
         
-        // Upload file
-        const snapshot = await storageRef.put(file);
+        // Upload file with metadata
+        const metadata = {
+            contentType: file.type
+        };
+        
+        console.log('Uploading to:', fileName);
+        const snapshot = await storageRef.put(file, metadata);
+        console.log('Upload completed, getting download URL...');
         
         // Get download URL
         const downloadURL = await snapshot.ref.getDownloadURL();
+        console.log('Download URL:', downloadURL);
         
         return downloadURL;
     } catch (error) {
@@ -306,7 +338,9 @@ async function uploadImageToFirebase(file) {
 // Modal Functions
 function initModals() {
     const modal = document.getElementById('imageUploadModal');
-    const closeBtn = document.querySelector('.modal .close');
+    if (!modal) return;
+    
+    const closeBtn = modal.querySelector('.close');
     
     if (closeBtn) {
         closeBtn.addEventListener('click', function() {
@@ -328,8 +362,11 @@ function initModals() {
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    document.getElementById('imagePreview').src = e.target.result;
-                    document.getElementById('imagePreview').style.display = 'block';
+                    const preview = document.getElementById('imagePreview');
+                    if (preview) {
+                        preview.src = e.target.result;
+                        preview.style.display = 'block';
+                    }
                 };
                 reader.readAsDataURL(file);
             }
@@ -344,7 +381,7 @@ function initModals() {
             const file = fileInput.files[0];
             
             if (!file) {
-                alert('Please select an image file first.');
+                showNotification('Please select an image file first.', 'error');
                 return;
             }
             
@@ -352,27 +389,45 @@ function initModals() {
                 uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
                 uploadBtn.disabled = true;
                 
+                console.log('Upload process started...');
                 const downloadURL = await uploadImageToFirebase(file);
+                console.log('Upload successful, URL:', downloadURL);
                 
                 // Set the image URL in the form
                 document.getElementById('itemImage').value = downloadURL;
                 document.getElementById('imageUploadModal').style.display = 'none';
                 
                 showNotification('Image uploaded successfully!', 'success');
+                
             } catch (error) {
-                showNotification('Error uploading image. Please try again.', 'error');
+                console.error('Upload failed:', error);
+                let errorMessage = 'Error uploading image. ';
+                
+                if (error.message.includes('permission') || error.message.includes('unauthorized')) {
+                    errorMessage += 'Please check Firebase Storage rules.';
+                } else if (error.message.includes('size')) {
+                    errorMessage += 'File too large. Maximum 5MB allowed.';
+                } else {
+                    errorMessage += 'Please try again.';
+                }
+                
+                showNotification(errorMessage, 'error');
             } finally {
-                uploadBtn.innerHTML = 'Upload';
+                uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload';
                 uploadBtn.disabled = false;
-                fileInput.value = '';
-                document.getElementById('imagePreview').style.display = 'none';
+                if (fileInput) fileInput.value = '';
+                const preview = document.getElementById('imagePreview');
+                if (preview) preview.style.display = 'none';
             }
         });
     }
 }
 
-function openImageUpload() {
-    document.getElementById('imageUploadModal').style.display = 'block';
+function openFileUpload() {
+    const modal = document.getElementById('imageUploadModal');
+    if (modal) {
+        modal.style.display = 'block';
+    }
 }
 
 // Notification System
@@ -448,4 +503,5 @@ if (logoutBtn) {
 window.editPortfolioItem = editPortfolioItem;
 window.deletePortfolioItem = deletePortfolioItem;
 window.openImageUpload = openImageUpload;
+window.openFileUpload = openFileUpload;
 window.hidePortfolioForm = hidePortfolioForm;
