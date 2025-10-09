@@ -57,7 +57,7 @@
             </div>
             <div class="nav-menu" id="navMenu">
                 <a href="#home" class="nav-link box-link">Home</a>
-                <a href="#portfolio" class="nav-link box-link">Portfolio</a> <!-- Changed to portfolio.html -->
+                <a href="#portfolio" class="nav-link box-link">Portfolio</a>
                 <a href="#services" class="nav-link box-link">Services</a>
                 <a href="#booking" class="nav-link box-link">Book Now</a>
                 <a href="#about" class="nav-link box-link">About</a>
@@ -80,7 +80,7 @@
             <h1 class="hero-title">We Make Your Moment <span class="highlight">Memorable Forever</span></h1>
             <p class="hero-subtitle">Professional Photography & Videography Services</p>
             <div class="hero-buttons">
-                <a href="#portfolio" class="btn btn-primary">View Our Work</a> <!-- Changed to portfolio.html -->
+                <a href="#portfolio" class="btn btn-primary">View Our Work</a>
                 <a href="#booking" class="btn btn-secondary">Book Now</a>
             </div>
         </div>
@@ -97,8 +97,8 @@
             </div>
             <!-- View More Button -->
             <div class="portfolio-cta">
-                <a href="portfolio/portfolio.html" class="btn btn-primary btn-large">
-                    <i class="fas fa-images"></i> View Complete Portfolio
+                <a href="#portfolio" class="btn btn-primary btn-large" onclick="loadMorePortfolio()">
+                    <i class="fas fa-images"></i> Load More Portfolio
                 </a>
             </div>
         </div>
@@ -447,7 +447,7 @@
                     </div>
                 </div>
                 <div class="about-image">
-                    <img src="image/about.png" alt="FotoTaker Team" class="about-img">
+                    <img src="image/about.png" alt="FotoTaker Team" class="about-img" onerror="this.src='https://picsum.photos/600/400?random=10'">
                 </div>
             </div>
         </div>
@@ -489,8 +489,7 @@
                         </div>
                     </div>
                 </div>
-                <form class="contact-form" id="contactForm" name="contact" netlify>
-                <!-- <form name="contact" netlify> -->
+                <form class="contact-form" id="contactForm">
                     <h3>Send us a Message</h3>
                     <input type="text" name="name" placeholder="Your Name" required>
                     <input type="email" name="email" placeholder="Your Email" required>
@@ -508,13 +507,12 @@
             <div class="footer-content">
                 <div class="footer-info">
                     <div class="footer-logo">
-                        <img src="image/logo.png" alt="FotoTaker Logo" class="logo-img">
-                        <!-- <h3>FotoTaker</h3> -->
+                        <img src="image/logo.png" alt="FotoTaker Logo" class="logo-img" onerror="this.src='https://picsum.photos/100/100?random=1'">
                         <p>Professional Photography & Videography Services</p>
                     </div>
                     <div class="footer-links">
                         <a href="#home">Home</a>
-                        <a href="portfolio/portfolio.html">Portfolio</a>
+                        <a href="#portfolio">Portfolio</a>
                         <a href="#services">Services</a>
                         <a href="#booking">Booking</a>
                         <a href="#about">About</a>
@@ -542,7 +540,7 @@
 
     <!-- Firebase Configuration -->
     <script>
-        // Firebase Configuration
+        // Firebase Configuration - SINGLE SOURCE OF TRUTH
         const firebaseConfig = {
             apiKey: "AIzaSyC-25CvcxzGmFuw3wRg-T9U-eKPuckFw0c",
             authDomain: "fototaker-studio.firebaseapp.com",
@@ -553,15 +551,14 @@
             measurementId: "G-W4NT35YBQJ"
         };
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
+        // Initialize Firebase only once
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        } else {
+            firebase.app(); // if already initialized, use that one
+        }
     </script>
 
     <script src="script.js"></script>
 </body>
 </html>
-
-
-
-
-
