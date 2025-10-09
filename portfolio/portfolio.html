@@ -160,6 +160,27 @@
         </div>
     </footer>
 
+    <!-- Video Modal - NEW ADDED -->
+    <div class="video-modal">
+        <div class="video-modal-content">
+            <div class="video-modal-header">
+                <h3 class="video-modal-title">Playing Video</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="video-player-container">
+                <video controls playsinline>
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+            <div class="video-modal-footer">
+                <p>If video doesn't play, it may be in an unsupported format.</p>
+                <button class="btn btn-secondary" onclick="openCurrentVideoInNewTab()">
+                    <i class="fas fa-external-link-alt"></i> Open in New Tab
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase Configuration -->
     <script>
         const firebaseConfig = {
