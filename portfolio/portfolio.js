@@ -2,16 +2,36 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Portfolio page loaded');
     
+    // Initialize Firebase first
+    initFirebase();
+    
     initTheme();
     initNavigation();
     initPortfolioFilters();
     initPortfolioLoading();
     initVideoModal();
-    initWhatsAppButtons();
-    initLoadMoreButton();
     
     console.log('Portfolio page initialized');
 });
+
+// Firebase Initialization
+function initFirebase() {
+    // Your Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyC-25CvcxzGmFuw3wRg-T9U-eKPuckFw0c",
+        authDomain: "fototaker-studio.firebaseapp.com",
+        projectId: "fototaker-studio",
+        storageBucket: "fototaker-studio.firebasestorage.app",
+        messagingSenderId: "401638389477",
+        appId: "1:401638389477:web:a8af16d0f9b49bf8dc460c",
+        measurementId: "G-W4NT35YBQJ"
+    };
+
+    // Initialize Firebase only if not already initialized
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+}
 
 // Initialize portfolio filters
 function initPortfolioFilters() {
@@ -76,6 +96,7 @@ async function loadCompletePortfolio() {
     if (!portfolioGrid) return;
     
     try {
+        // First try Firebase
         const db = firebase.firestore();
         const querySnapshot = await db.collection('portfolio')
             .orderBy('createdAt', 'desc')
@@ -92,10 +113,25 @@ async function loadCompletePortfolio() {
         if (portfolioData.length > 0) {
             displayCompletePortfolio(portfolioData);
         } else {
-            showDefaultPortfolio();
+            // Fallback to localStorage (admin panel data)
+            loadPortfolioFromLocalStorage();
         }
     } catch (error) {
-        console.error('Error loading portfolio:', error);
+        console.error('Error loading portfolio from Firebase:', error);
+        // Fallback to localStorage
+        loadPortfolioFromLocalStorage();
+    }
+}
+
+// Load portfolio from localStorage (admin panel data)
+function loadPortfolioFromLocalStorage() {
+    const portfolioGrid = document.getElementById('portfolioGridFull');
+    const portfolioData = JSON.parse(localStorage.getItem('portfolioData')) || [];
+    
+    if (portfolioData.length > 0) {
+        displayCompletePortfolio(portfolioData);
+    } else {
+        // Final fallback - default portfolio
         showDefaultPortfolio();
     }
 }
@@ -108,17 +144,8 @@ function displayCompletePortfolio(items) {
     
     portfolioGrid.innerHTML = items.map(item => `
         <div class="portfolio-item-full" data-categories="${item.category || 'all'}">
-            ${item.type === 'video' ? `
-                <video poster="${item.thumbnail}" preload="metadata">
-                    <source src="${item.url}" type="video/mp4">
-                </video>
-                <button class="video-play-btn" data-video="${item.url}">
-                    <i class="fas fa-play"></i>
-                </button>
-            ` : `
-                <img src="${item.image}" alt="${item.title}" 
-                     onerror="this.src='https://picsum.photos/400/600?random=${Math.floor(Math.random() * 100)}'">
-            `}
+            <img src="${item.image}" alt="${item.title}" 
+                 onerror="this.src='https://picsum.photos/400/600?random=${Math.floor(Math.random() * 100)}'">
             <div class="portfolio-overlay-full">
                 <h3>${item.title}</h3>
                 ${item.description ? `<p>${item.description}</p>` : ''}
@@ -128,11 +155,11 @@ function displayCompletePortfolio(items) {
         </div>
     `).join('');
     
-    // Initialize video play buttons
-    initVideoPlayButtons();
+    // Re-initialize animations after loading content
+    initPortfolioAnimations();
 }
 
-// Load videos and reels
+// Load videos and reels from Firebase (Single Document)
 async function loadVideosAndReels() {
     const videosGrid = document.getElementById('videosGrid');
     
@@ -140,21 +167,18 @@ async function loadVideosAndReels() {
     
     try {
         const db = firebase.firestore();
-        const querySnapshot = await db.collection('videos')
-            .orderBy('createdAt', 'desc')
-            .limit(6)
-            .get();
+        const doc = await db.collection('websiteData').doc('reelsData').get();
         
-        const videosData = [];
-        querySnapshot.forEach((doc) => {
-            videosData.push({
-                id: doc.id,
-                ...doc.data()
-            });
-        });
+        if (!doc.exists) {
+            showDefaultVideos();
+            return;
+        }
         
-        if (videosData.length > 0) {
-            displayVideos(videosData);
+        const reelsData = doc.data();
+        const reels = reelsData.reels || [];
+        
+        if (reels.length > 0) {
+            displayVideos(reels);
         } else {
             showDefaultVideos();
         }
@@ -164,25 +188,29 @@ async function loadVideosAndReels() {
     }
 }
 
-// Display videos
-function displayVideos(videos) {
+// Display videos from single document
+function displayVideos(reels) {
     const videosGrid = document.getElementById('videosGrid');
     
     if (!videosGrid) return;
     
-    videosGrid.innerHTML = videos.map(video => `
-        <div class="video-card">
+    videosGrid.innerHTML = reels.map(reel => `
+        <div class="video-card" data-categories="${reel.category}">
             <div class="video-thumbnail">
-                <img src="${video.thumbnail}" alt="${video.title}"
+                <img src="${reel.thumbnail}" alt="${reel.title}"
                      onerror="this.src='https://picsum.photos/400/600?random=${Math.floor(Math.random() * 100)}'">
-                <button class="video-play-btn" data-video="${video.url}">
+                <button class="video-play-btn" data-video="${reel.url}">
                     <i class="fas fa-play"></i>
                 </button>
+                ${reel.duration ? `<div class="video-duration">${reel.duration}</div>` : ''}
+                ${reel.platform ? `<div class="video-platform">${reel.platform}</div>` : ''}
             </div>
             <div class="video-info">
-                <h3>${video.title}</h3>
-                <p>${video.description || 'Instagram Reel'}</p>
-                <small>${new Date(video.createdAt).toLocaleDateString()}</small>
+                <h3>${reel.title}</h3>
+                ${reel.description ? `<p>${reel.description}</p>` : ''}
+                <div class="video-meta">
+                    <span class="video-category">${getCategoryDisplayName(reel.category)}</span>
+                </div>
             </div>
         </div>
     `).join('');
@@ -258,6 +286,7 @@ function playVideo(videoUrl) {
         // Play video
         video.play().catch(e => {
             console.log('Video play failed:', e);
+            showNotification('Video playback failed. Please check the video URL.', 'error');
         });
     }
 }
@@ -300,66 +329,6 @@ function initPortfolioAnimations() {
     });
 }
 
-// Initialize Load More button
-function initLoadMoreButton() {
-    const loadMoreBtn = document.getElementById('loadMoreBtn');
-    const loadMoreSpinner = document.getElementById('loadMoreSpinner');
-    
-    if (loadMoreBtn) {
-        loadMoreBtn.addEventListener('click', function() {
-            if (loadMoreSpinner) {
-                loadMoreSpinner.style.display = 'inline-block';
-            }
-            this.disabled = true;
-            this.innerHTML = 'Loading...';
-            
-            // Simulate loading more items
-            setTimeout(() => {
-                loadMorePortfolioItems();
-                if (loadMoreSpinner) {
-                    loadMoreSpinner.style.display = 'none';
-                }
-                this.disabled = false;
-                this.innerHTML = '<i class="fas fa-spinner fa-spin" id="loadMoreSpinner" style="display: none;"></i> Load More';
-            }, 1500);
-        });
-    }
-}
-
-// Load more portfolio items (simulated)
-function loadMorePortfolioItems() {
-    // This would typically load more items from Firebase
-    // For now, we'll just show a notification
-    showNotification('More portfolio items loaded!', 'success');
-}
-
-// Initialize WhatsApp buttons
-function initWhatsAppButtons() {
-    // Add WhatsApp functionality to any button with onclick
-    const whatsappButtons = document.querySelectorAll('[onclick*="openWhatsApp"]');
-    whatsappButtons.forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const onclickAttr = this.getAttribute('onclick');
-            const match = onclickAttr.match(/openWhatsApp\('([^']+)'\)/);
-            if (match) {
-                const message = match[1];
-                openWhatsApp(message);
-            } else {
-                openWhatsApp();
-            }
-        });
-    });
-}
-
-// WhatsApp integration
-function openWhatsApp(prefilledMessage = '') {
-    const phone = '919471640485';
-    const message = prefilledMessage || 'Hello! I want to book photography/videography services';
-    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
-}
-
 // Show default portfolio (fallback)
 function showDefaultPortfolio() {
     const portfolioGrid = document.getElementById('portfolioGridFull');
@@ -394,20 +363,26 @@ function showDefaultVideos() {
         { 
             title: 'Wedding Highlights', 
             thumbnail: 'https://picsum.photos/400/600?random=21',
-            url: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
-            createdAt: new Date().toISOString()
+            url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+            category: 'wedding',
+            duration: '0:30',
+            platform: 'instagram'
         },
         { 
             title: 'Pre-Wedding Reel', 
             thumbnail: 'https://picsum.photos/400/600?random=22',
-            url: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
-            createdAt: new Date().toISOString()
+            url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+            category: 'pre-wedding',
+            duration: '0:45',
+            platform: 'instagram'
         },
         { 
             title: 'Portrait Session', 
             thumbnail: 'https://picsum.photos/400/600?random=23',
-            url: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
-            createdAt: new Date().toISOString()
+            url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+            category: 'portrait',
+            duration: '0:25',
+            platform: 'instagram'
         }
     ];
     
@@ -569,3 +544,23 @@ function initNavigation() {
         });
     });
 }
+
+// WhatsApp integration for portfolio page
+function openWhatsApp(prefilledMessage = '') {
+    const phone = '919471640485';
+    const message = prefilledMessage || 'Hello! I want to book photography/videography services';
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+}
+
+// Handle image errors gracefully
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('img').forEach(img => {
+        img.onerror = function() {
+            console.log('Image failed to load:', this.src);
+            if (!this.src.includes('picsum.photos')) {
+                this.src = 'https://picsum.photos/400/600?random=' + Math.floor(Math.random() * 100);
+            }
+        };
+    });
+});
