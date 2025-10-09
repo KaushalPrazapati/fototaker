@@ -547,9 +547,211 @@ function showNotification(message, type = 'info') {
     }, 5000);
 }
 
+// Videos Management Functions
+function initVideosManagement() {
+    const addVideoBtn = document.getElementById('addVideoBtn');
+    const videoForm = document.getElementById('videoItemForm');
+    
+    // Load existing videos
+    loadVideosList();
+    
+    // Add new video button
+    if (addVideoBtn) {
+        addVideoBtn.addEventListener('click', function() {
+            showVideoForm();
+        });
+    }
+    
+    // Video form submission
+    if (videoForm) {
+        videoForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveVideoItem();
+        });
+    }
+}
+
+function showVideoForm(video = null, videoId = '') {
+    const form = document.getElementById('videoForm');
+    const formTitle = document.getElementById('videoFormTitle');
+    
+    if (!form) {
+        console.error('Video form not found');
+        return;
+    }
+    
+    if (video) {
+        // Edit mode
+        formTitle.textContent = 'Edit Video';
+        document.getElementById('videoId').value = videoId;
+        document.getElementById('videoTitle').value = video.title || '';
+        document.getElementById('videoDescription').value = video.description || '';
+        document.getElementById('videoUrl').value = video.url || '';
+        document.getElementById('videoThumbnail').value = video.thumbnail || '';
+        document.getElementById('videoCategory').value = video.category || '';
+        document.getElementById('videoPlatform').value = video.platform || 'youtube';
+    } else {
+        // Add mode
+        formTitle.textContent = 'Add Video/Reel';
+        document.getElementById('videoItemForm').reset();
+        document.getElementById('videoId').value = '';
+        document.getElementById('videoPlatform').value = 'youtube';
+    }
+    
+    form.style.display = 'block';
+    form.scrollIntoView({ behavior: 'smooth' });
+}
+
+function hideVideoForm() {
+    const form = document.getElementById('videoForm');
+    if (form) {
+        form.style.display = 'none';
+    }
+}
+
+async function saveVideoItem() {
+    const videoId = document.getElementById('videoId').value;
+    const title = document.getElementById('videoTitle').value.trim();
+    const description = document.getElementById('videoDescription').value.trim();
+    const url = document.getElementById('videoUrl').value.trim();
+    const thumbnail = document.getElementById('videoThumbnail').value.trim();
+    const category = document.getElementById('videoCategory').value;
+    const platform = document.getElementById('videoPlatform').value;
+    
+    // Validation
+    if (!title || !url || !thumbnail || !category) {
+        showNotification('Please fill all required fields', 'error');
+        return;
+    }
+    
+    const videoData = {
+        title: title,
+        description: description,
+        url: url,
+        thumbnail: thumbnail,
+        category: category,
+        platform: platform,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    
+    try {
+        const db = firebase.firestore();
+        const videosRef = db.collection('videos');
+        
+        if (videoId) {
+            // Update existing video
+            await videosRef.doc(videoId).update(videoData);
+            showNotification('Video updated successfully!', 'success');
+        } else {
+            // Add new video
+            videoData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            await videosRef.add(videoData);
+            showNotification('Video added successfully!', 'success');
+        }
+        
+        hideVideoForm();
+        loadVideosList();
+        
+    } catch (error) {
+        console.error('Error saving video:', error);
+        showNotification('Error saving video: ' + error.message, 'error');
+    }
+}
+
+async function loadVideosList() {
+    try {
+        const db = firebase.firestore();
+        const querySnapshot = await db.collection('videos')
+            .orderBy('createdAt', 'desc')
+            .get();
+        
+        const videosList = document.getElementById('videosList');
+        
+        if (!videosList) {
+            console.error('Videos list element not found');
+            return;
+        }
+        
+        if (querySnapshot.empty) {
+            videosList.innerHTML = '<tr><td colspan="5" class="text-center">No videos found. Add your first video!</td></tr>';
+            return;
+        }
+        
+        videosList.innerHTML = '';
+        querySnapshot.forEach((doc) => {
+            const video = doc.data();
+            const videoId = doc.id;
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>
+                    <img src="${video.thumbnail}" alt="${video.title}" 
+                         class="admin-thumbnail" 
+                         onerror="this.src='https://picsum.photos/100/100?random=1'">
+                </td>
+                <td>${video.title || 'Untitled'}</td>
+                <td><span class="category-badge">${getCategoryDisplayName(video.category) || 'Uncategorized'}</span></td>
+                <td>${video.platform || 'youtube'}</td>
+                <td>
+                    <button class="btn btn-primary btn-sm" onclick="editVideo('${videoId}')">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="btn btn-logout btn-sm" onclick="deleteVideo('${videoId}')">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </td>
+            `;
+            videosList.appendChild(row);
+        });
+        
+    } catch (error) {
+        console.error('Error loading videos:', error);
+        const videosList = document.getElementById('videosList');
+        if (videosList) {
+            videosList.innerHTML = '<tr><td colspan="5" class="text-center error">Error loading videos. Check console.</td></tr>';
+        }
+    }
+}
+
+async function editVideo(videoId) {
+    try {
+        const db = firebase.firestore();
+        const doc = await db.collection('videos').doc(videoId).get();
+        
+        if (doc.exists) {
+            const video = doc.data();
+            showVideoForm(video, videoId);
+        } else {
+            showNotification('Video not found', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading video:', error);
+        showNotification('Error loading video details.', 'error');
+    }
+}
+
+async function deleteVideo(videoId) {
+    if (!confirm('Are you sure you want to delete this video?')) {
+        return;
+    }
+    
+    try {
+        const db = firebase.firestore();
+        await db.collection('videos').doc(videoId).delete();
+        
+        showNotification('Video deleted successfully!', 'success');
+        loadVideosList();
+        
+    } catch (error) {
+        console.error('Error deleting video:', error);
+        showNotification('Error deleting video: ' + error.message, 'error');
+    }
+}
+
 // Make functions globally available
 window.openImageUpload = openImageUpload;
 window.closeImageUploadModal = closeImageUploadModal;
 window.hidePortfolioForm = hidePortfolioForm;
 window.editPortfolioItem = editPortfolioItem;
 window.deletePortfolioItem = deletePortfolioItem;
+
