@@ -844,3 +844,258 @@ img:not([src]) {
 body.loaded {
     visibility: visible;
 }
+/* Platform-based Video Cards */
+.video-card {
+    background: var(--card-bg);
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: all 0.3s ease;
+}
+
+.video-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* YouTube Videos - Horizontal (16:9) */
+.youtube-video .video-thumbnail {
+    position: relative;
+    aspect-ratio: 16/9;
+    overflow: hidden;
+}
+
+/* Instagram Reels - Vertical (9:16) */
+.reel-video .video-thumbnail {
+    position: relative;
+    aspect-ratio: 9/16;
+    overflow: hidden;
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+.video-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Platform Badge on Thumbnail */
+.video-platform-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.video-platform-badge.youtube {
+    background: rgba(255, 0, 0, 0.9);
+}
+
+.video-platform-badge.instagram {
+    background: rgba(228, 64, 95, 0.9);
+}
+
+.video-play-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 2;
+}
+
+.video-play-btn:hover {
+    background: white;
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+.video-play-btn i {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    margin-left: 3px;
+}
+
+.video-info {
+    padding: 1.5rem;
+}
+
+.video-info h3 {
+    font-family: var(--font-heading);
+    margin-bottom: 0.5rem;
+    color: var(--text-dark);
+    font-size: 1.3rem;
+}
+
+.video-info p {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.video-info small {
+    color: var(--text-light);
+    font-size: 0.8rem;
+}
+
+/* Platform-based Video Modal */
+.video-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.video-modal-content {
+    position: relative;
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    max-width: 90%;
+    max-height: 90%;
+}
+
+/* YouTube Modal - Wide */
+.youtube-modal {
+    width: 800px;
+    max-width: 90vw;
+}
+
+.youtube-modal iframe {
+    width: 100%;
+    height: 450px;
+    border: none;
+}
+
+/* Reel Modal - Tall */
+.reel-modal {
+    width: 400px;
+    max-width: 90vw;
+    max-height: 80vh;
+}
+
+.reel-modal .modal-video-container {
+    padding: 20px;
+    text-align: center;
+}
+
+.modal-header {
+    padding: 1rem 1.5rem;
+    background: #f8f9fa;
+    border-bottom: 1px solid #eee;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.2rem;
+}
+
+.close-modal {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    color: #666;
+    font-size: 1.5rem;
+    cursor: pointer;
+    background: none;
+    border: none;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.close-modal:hover {
+    color: #e74c3c;
+}
+
+.video-placeholder {
+    padding: 3rem 2rem;
+    text-align: center;
+    color: #666;
+}
+
+.video-placeholder i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #ccc;
+}
+
+.video-placeholder p {
+    margin-bottom: 1.5rem;
+}
+
+/* Videos Grid Layout */
+.videos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .videos-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .youtube-modal {
+        width: 95vw;
+    }
+    
+    .reel-modal {
+        width: 95vw;
+        max-height: 70vh;
+    }
+    
+    .youtube-modal iframe {
+        height: 300px;
+    }
+    
+    .reel-video .video-thumbnail {
+        max-width: 250px;
+    }
+}
+
+@media (max-width: 480px) {
+    .video-card {
+        margin: 0 10px;
+    }
+    
+    .youtube-modal iframe {
+        height: 250px;
+    }
+    
+    .reel-modal {
+        width: 100vw;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+}
