@@ -1,36 +1,25 @@
-// Portfolio Page JavaScript
+// Portfolio Page JavaScript - COMPLETELY FIXED
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Portfolio page loaded');
     
-    // Initialize Firebase first
-    initFirebase();
-    
+    // Initialize all systems
     initTheme();
     initNavigation();
     initPortfolioFilters();
     initPortfolioLoading();
     
+    // Make body visible
+    document.body.classList.add('loaded');
+    
     console.log('Portfolio page initialized');
 });
 
-// Firebase Initialization
-function initFirebase() {
-    // Your Firebase configuration
-    const firebaseConfig = {
-        apiKey: "AIzaSyC-25CvcxzGmFuw3wRg-T9U-eKPuckFw0c",
-        authDomain: "fototaker-studio.firebaseapp.com",
-        projectId: "fototaker-studio",
-        storageBucket: "fototaker-studio.firebasestorage.app",
-        messagingSenderId: "401638389477",
-        appId: "1:401638389477:web:a8af16d0f9b49bf8dc460c",
-        measurementId: "G-W4NT35YBQJ"
-    };
-
-    // Initialize Firebase only if not already initialized
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-}
+// Portfolio state management
+let currentPortfolioPage = 0;
+const portfolioPerPage = 12;
+let allPortfolioItems = [];
+let filteredPortfolioItems = [];
+let currentFilter = 'all';
 
 // Initialize portfolio filters
 function initPortfolioFilters() {
@@ -44,6 +33,7 @@ function initPortfolioFilters() {
             this.classList.add('active');
             
             const filter = this.getAttribute('data-filter');
+            currentFilter = filter;
             filterPortfolioItems(filter);
         });
     });
@@ -51,48 +41,42 @@ function initPortfolioFilters() {
 
 // Filter portfolio items
 function filterPortfolioItems(filter) {
-    const items = document.querySelectorAll('.portfolio-item-full');
+    if (filter === 'all') {
+        filteredPortfolioItems = [...allPortfolioItems];
+    } else {
+        filteredPortfolioItems = allPortfolioItems.filter(item => 
+            item.category === filter
+        );
+    }
     
-    items.forEach(item => {
-        const categories = item.getAttribute('data-categories');
-        if (!categories) return;
-        
-        const categoryList = categories.split(' ');
-        
-        if (filter === 'all' || categoryList.includes(filter)) {
-            item.style.display = 'block';
-            setTimeout(() => {
-                item.style.opacity = '1';
-                item.style.transform = 'scale(1)';
-            }, 100);
-        } else {
-            item.style.opacity = '0';
-            item.style.transform = 'scale(0.8)';
-            setTimeout(() => {
-                item.style.display = 'none';
-            }, 400);
-        }
-    });
+    // Reset pagination
+    currentPortfolioPage = 0;
+    
+    // Display filtered items
+    displayPortfolioPage();
 }
 
 // Initialize portfolio loading
 async function initPortfolioLoading() {
     try {
-        await loadCompletePortfolio();
+        await loadAllPortfolioItems();
         initPortfolioAnimations();
+        setupLoadMore();
     } catch (error) {
         console.error('Error loading portfolio:', error);
         showDefaultPortfolio();
     }
 }
 
-// Load complete portfolio from Firebase
-async function loadCompletePortfolio() {
+// Load all portfolio items from Firebase
+async function loadAllPortfolioItems() {
     const portfolioGrid = document.getElementById('portfolioGridFull');
     
     if (!portfolioGrid) return;
     
     try {
+        console.log('Loading portfolio from Firebase...');
+        
         // First try Firebase
         const db = firebase.firestore();
         const querySnapshot = await db.collection('portfolio')
@@ -101,14 +85,19 @@ async function loadCompletePortfolio() {
         
         const portfolioData = [];
         querySnapshot.forEach((doc) => {
+            const data = doc.data();
             portfolioData.push({
                 id: doc.id,
-                ...doc.data()
+                ...data
             });
         });
         
+        console.log('Portfolio data loaded:', portfolioData.length, 'items');
+        
         if (portfolioData.length > 0) {
-            displayCompletePortfolio(portfolioData);
+            allPortfolioItems = portfolioData;
+            filteredPortfolioItems = [...portfolioData];
+            displayPortfolioPage();
         } else {
             // Fallback to localStorage (admin panel data)
             loadPortfolioFromLocalStorage();
@@ -122,29 +111,47 @@ async function loadCompletePortfolio() {
 
 // Load portfolio from localStorage (admin panel data)
 function loadPortfolioFromLocalStorage() {
-    const portfolioGrid = document.getElementById('portfolioGridFull');
     const portfolioData = JSON.parse(localStorage.getItem('portfolioData')) || [];
     
     if (portfolioData.length > 0) {
-        displayCompletePortfolio(portfolioData);
+        allPortfolioItems = portfolioData;
+        filteredPortfolioItems = [...portfolioData];
+        displayPortfolioPage();
     } else {
         // Final fallback - default portfolio
         showDefaultPortfolio();
     }
 }
 
-// Display complete portfolio
-function displayCompletePortfolio(items) {
+// Display current page of portfolio items
+function displayPortfolioPage() {
     const portfolioGrid = document.getElementById('portfolioGridFull');
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
     
     if (!portfolioGrid) return;
     
-    portfolioGrid.innerHTML = items.map(item => `
+    const startIndex = currentPortfolioPage * portfolioPerPage;
+    const endIndex = startIndex + portfolioPerPage;
+    const itemsToShow = filteredPortfolioItems.slice(0, endIndex);
+    
+    if (itemsToShow.length === 0) {
+        portfolioGrid.innerHTML = `
+            <div class="loading" style="grid-column: 1 / -1;">
+                <p>No portfolio items found for this filter.</p>
+                <p>Try selecting a different category or check back later.</p>
+            </div>
+        `;
+        if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+        return;
+    }
+    
+    portfolioGrid.innerHTML = itemsToShow.map(item => `
         <div class="portfolio-item-full" data-categories="${item.category || 'all'}">
-            <img src="${item.image}" alt="${item.title}" 
-                 onerror="this.src='https://picsum.photos/400/600?random=${Math.floor(Math.random() * 100)}'">
+            <img src="${item.image || 'https://picsum.photos/400/600?random=' + Math.floor(Math.random() * 100)}" 
+                 alt="${item.title || 'Portfolio Image'}" 
+                 onerror="handleImageError(this)">
             <div class="portfolio-overlay-full">
-                <h3>${item.title}</h3>
+                <h3>${item.title || 'Portfolio Item'}</h3>
                 ${item.description ? `<p>${item.description}</p>` : ''}
                 <small>${getCategoryDisplayName(item.category)}</small>
             </div>
@@ -152,8 +159,56 @@ function displayCompletePortfolio(items) {
         </div>
     `).join('');
     
+    // Update load more button
+    if (loadMoreBtn) {
+        if (endIndex >= filteredPortfolioItems.length) {
+            loadMoreBtn.style.display = 'none';
+        } else {
+            loadMoreBtn.style.display = 'inline-flex';
+            loadMoreBtn.disabled = false;
+            document.getElementById('loadMoreSpinner').style.display = 'none';
+            document.getElementById('loadMoreText').textContent = 'Load More';
+        }
+    }
+    
     // Re-initialize animations after loading content
     initPortfolioAnimations();
+}
+
+// Load more portfolio items
+async function loadMorePortfolio() {
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    const loadMoreSpinner = document.getElementById('loadMoreSpinner');
+    const loadMoreText = document.getElementById('loadMoreText');
+    
+    if (!loadMoreBtn) return;
+    
+    try {
+        loadMoreBtn.disabled = true;
+        loadMoreSpinner.style.display = 'inline-block';
+        loadMoreText.textContent = 'Loading...';
+        
+        // Simulate loading delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        currentPortfolioPage++;
+        displayPortfolioPage();
+        
+    } catch (error) {
+        console.error('Error loading more portfolio items:', error);
+        showNotification('Error loading more items', 'error');
+        loadMoreBtn.disabled = false;
+        loadMoreSpinner.style.display = 'none';
+        loadMoreText.textContent = 'Load More';
+    }
+}
+
+// Setup load more functionality
+function setupLoadMore() {
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', loadMorePortfolio);
+    }
 }
 
 // Initialize portfolio animations
@@ -183,26 +238,28 @@ function initPortfolioAnimations() {
 
 // Show default portfolio (fallback)
 function showDefaultPortfolio() {
-    const portfolioGrid = document.getElementById('portfolioGridFull');
-    
-    if (!portfolioGrid) return;
-    
     const defaultItems = [
-        { category: 'wedding', title: 'Wedding Photography', image: 'https://picsum.photos/400/600?random=1' },
-        { category: 'pre-wedding', title: 'Pre-Wedding Shoot', image: 'https://picsum.photos/400/600?random=2' },
-        { category: 'portrait', title: 'Portrait Session', image: 'https://picsum.photos/400/600?random=3' },
-        { category: 'events', title: 'Corporate Event', image: 'https://picsum.photos/400/600?random=4' },
-        { category: 'wedding', title: 'Candid Moments', image: 'https://picsum.photos/400/600?random=5' },
-        { category: 'pre-wedding', title: 'Couple Shoot', image: 'https://picsum.photos/400/600?random=6' },
-        { category: 'portrait', title: 'Family Portrait', image: 'https://picsum.photos/400/600?random=7' },
-        { category: 'events', title: 'Birthday Celebration', image: 'https://picsum.photos/400/600?random=8' },
-        { category: 'wedding', title: 'Traditional Ceremony', image: 'https://picsum.photos/400/600?random=9' },
-        { category: 'pre-wedding', title: 'Outdoor Shoot', image: 'https://picsum.photos/400/600?random=10' },
-        { category: 'portrait', title: 'Maternity Shoot', image: 'https://picsum.photos/400/600?random=11' },
-        { category: 'events', title: 'Anniversary', image: 'https://picsum.photos/400/600?random=12' }
+        { category: 'wedding', title: 'Beautiful Wedding Ceremony', description: 'Traditional wedding moments', image: 'https://picsum.photos/400/600?random=1' },
+        { category: 'pre-wedding', title: 'Romantic Pre-Wedding', description: 'Couple photoshoot in nature', image: 'https://picsum.photos/400/600?random=2' },
+        { category: 'portrait', title: 'Professional Portrait', description: 'Studio portrait session', image: 'https://picsum.photos/400/600?random=3' },
+        { category: 'events', title: 'Corporate Event', description: 'Business conference coverage', image: 'https://picsum.photos/400/600?random=4' },
+        { category: 'wedding', title: 'Candid Wedding Moments', description: 'Natural and emotional shots', image: 'https://picsum.photos/400/600?random=5' },
+        { category: 'pre-wedding', title: 'Urban Couple Shoot', description: 'Cityscape photography', image: 'https://picsum.photos/400/600?random=6' },
+        { category: 'portrait', title: 'Family Portrait', description: 'Multi-generational family photos', image: 'https://picsum.photos/400/600?random=7' },
+        { category: 'events', title: 'Birthday Celebration', description: 'Special birthday event', image: 'https://picsum.photos/400/600?random=8' },
+        { category: 'wedding', title: 'Traditional Ceremony', description: 'Cultural wedding traditions', image: 'https://picsum.photos/400/600?random=9' },
+        { category: 'pre-wedding', title: 'Beach Shoot', description: 'Sunset couple photos', image: 'https://picsum.photos/400/600?random=10' },
+        { category: 'portrait', title: 'Maternity Shoot', description: 'Pregnancy photography', image: 'https://picsum.photos/400/600?random=11' },
+        { category: 'events', title: 'Anniversary Party', description: '25 years celebration', image: 'https://picsum.photos/400/600?random=12' },
+        { category: 'wedding', title: 'Reception Decor', description: 'Beautiful venue setup', image: 'https://picsum.photos/400/600?random=13' },
+        { category: 'pre-wedding', title: 'Winter Couple', description: 'Snowy romantic shoot', image: 'https://picsum.photos/400/600?random=14' },
+        { category: 'portrait', title: 'Newborn Photos', description: 'Baby photography session', image: 'https://picsum.photos/400/600?random=15' },
+        { category: 'events', title: 'Product Launch', description: 'Corporate product event', image: 'https://picsum.photos/400/600?random=16' }
     ];
     
-    displayCompletePortfolio(defaultItems);
+    allPortfolioItems = defaultItems;
+    filteredPortfolioItems = [...defaultItems];
+    displayPortfolioPage();
 }
 
 // Helper function to get category display name
@@ -211,9 +268,18 @@ function getCategoryDisplayName(category) {
         'wedding': 'Wedding',
         'pre-wedding': 'Pre-Wedding',
         'portrait': 'Portrait',
-        'events': 'Events'
+        'events': 'Events',
+        'drone': 'Drone'
     };
-    return categoryMap[category] || category;
+    return categoryMap[category] || 'Photography';
+}
+
+// Image error handler
+function handleImageError(img) {
+    console.log('Image failed to load:', img.src);
+    if (!img.src.includes('picsum.photos')) {
+        img.src = 'https://picsum.photos/400/600?random=' + Math.floor(Math.random() * 100);
+    }
 }
 
 // Notification system
@@ -271,7 +337,7 @@ function showNotification(message, type = 'info') {
     document.body.appendChild(notification);
 }
 
-// Theme and Navigation functions
+// Theme Management
 function initTheme() {
     const themeToggle = document.getElementById('themeToggle');
     const body = document.body;
@@ -279,9 +345,22 @@ function initTheme() {
     if (!themeToggle) return;
     
     const themeIcon = themeToggle.querySelector('i');
-    const savedTheme = localStorage.getItem('theme') || 'light';
     
+    // Check saved theme or system preference
+    const getSavedTheme = () => {
+        const saved = localStorage.getItem('theme');
+        if (saved) return saved;
+        
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            return 'dark';
+        }
+        return 'light';
+    };
+    
+    // Apply theme function
     const applyTheme = (theme) => {
+        console.log('Applying theme:', theme);
+        
         if (theme === 'dark') {
             body.classList.add('dark-theme');
             body.classList.remove('light-theme');
@@ -295,28 +374,40 @@ function initTheme() {
         }
     };
     
+    // Initialize theme
+    const savedTheme = getSavedTheme();
     applyTheme(savedTheme);
     
+    // Theme toggle click event
     themeToggle.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
         
         const isDark = body.classList.contains('dark-theme');
         const newTheme = isDark ? 'light' : 'dark';
+        
         applyTheme(newTheme);
         localStorage.setItem('theme', newTheme);
     });
 }
 
+// Navigation Management
 function initNavigation() {
     const navToggle = document.getElementById('navToggle');
     const navMenu = document.getElementById('navMenu');
     
+    // Mobile navigation toggle
     if (navToggle && navMenu) {
         navToggle.addEventListener('click', function() {
             navMenu.classList.toggle('active');
             this.classList.toggle('active');
         });
+    }
+    
+    // Close mobile menu function
+    function closeMobileMenu() {
+        if (navMenu) navMenu.classList.remove('active');
+        if (navToggle) navToggle.classList.remove('active');
     }
     
     // Close mobile menu when clicking outside
@@ -335,46 +426,21 @@ function initNavigation() {
             closeMobileMenu();
         });
     });
-    
-    function closeMobileMenu() {
-        if (navMenu) navMenu.classList.remove('active');
-        if (navToggle) navToggle.classList.remove('active');
-    }
-    
-    // Smooth scroll for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const targetId = this.getAttribute('href');
-            if (targetId === '#') return;
-            
-            const targetElement = document.querySelector(targetId);
-            if (targetElement) {
-                targetElement.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
-        });
-    });
 }
 
 // WhatsApp integration for portfolio page
 function openWhatsApp(prefilledMessage = '') {
     const phone = '919471640485';
-    const message = prefilledMessage || 'Hello! I want to book photography/videography services';
+    const message = prefilledMessage || 'Hello! I saw your portfolio and want to book photography/videography services';
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
 }
 
-// Handle image errors gracefully
+// Handle image errors on page load
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('img').forEach(img => {
         img.onerror = function() {
-            console.log('Image failed to load:', this.src);
-            if (!this.src.includes('picsum.photos')) {
-                this.src = 'https://picsum.photos/400/600?random=' + Math.floor(Math.random() * 100);
-            }
+            handleImageError(this);
         };
     });
 });
