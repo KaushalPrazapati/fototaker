@@ -22,7 +22,7 @@
 
     <title>Portfolio - FotoTaker Studio</title>
     
-    <meta name="description" content="View our complete portfolio - Wedding photography, pre-wedding shoots, candid photography, videography, and Instagram reels.">
+    <meta name="description" content="View our complete portfolio - Wedding photography, pre-wedding shoots, candid photography, and events photography.">
     
     <link rel="stylesheet" href="portfolio.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -61,7 +61,7 @@
     <section class="portfolio-header">
         <div class="container">
             <h1>Our Complete Portfolio</h1>
-            <p>Explore our extensive collection of photography and videography work</p>
+            <p>Explore our extensive collection of photography work</p>
             
             <!-- Filter Buttons -->
             <div class="portfolio-filters" id="portfolioFilters">
@@ -70,8 +70,6 @@
                 <button class="filter-btn" data-filter="pre-wedding">Pre-Wedding</button>
                 <button class="filter-btn" data-filter="portrait">Portrait</button>
                 <button class="filter-btn" data-filter="events">Events</button>
-                <button class="filter-btn" data-filter="reels">Instagram Reels</button>
-                <button class="filter-btn" data-filter="videos">Videos</button>
             </div>
         </div>
     </section>
@@ -89,18 +87,6 @@
                     <i class="fas fa-spinner fa-spin" id="loadMoreSpinner" style="display: none;"></i>
                     Load More
                 </button>
-            </div>
-        </div>
-    </section>
-
-    <!-- Video/Reels Section -->
-    <section class="videos-section">
-        <div class="container">
-            <h2 class="section-title">Instagram Reels & Videos</h2>
-            <p class="section-subtitle">Watch our latest video content and Instagram reels</p>
-            
-            <div class="videos-grid" id="videosGrid">
-                <div class="loading">Loading videos...</div>
             </div>
         </div>
     </section>
@@ -159,27 +145,6 @@
             <p class="copyright">&copy; 2025 FotoTaker. All rights reserved.</p>
         </div>
     </footer>
-
-    <!-- Video Modal - NEW ADDED -->
-    <div class="video-modal">
-        <div class="video-modal-content">
-            <div class="video-modal-header">
-                <h3 class="video-modal-title">Playing Video</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <div class="video-player-container">
-                <video controls playsinline>
-                    Your browser does not support the video tag.
-                </video>
-            </div>
-            <div class="video-modal-footer">
-                <p>If video doesn't play, it may be in an unsupported format.</p>
-                <button class="btn btn-secondary" onclick="openCurrentVideoInNewTab()">
-                    <i class="fas fa-external-link-alt"></i> Open in New Tab
-                </button>
-            </div>
-        </div>
-    </div>
 
     <!-- Firebase Configuration -->
     <script>
