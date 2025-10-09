@@ -1,25 +1,30 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
-import { getStorage } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-storage.js";
+// firebase.js - SIMPLIFIED VERSION
 
-// firebase.js
+// Check if Firebase is already initialized in index.html
+if (typeof firebase === 'undefined') {
+    console.error('Firebase not loaded. Make sure Firebase SDK is included in index.html');
+} else {
+    console.log('Firebase already initialized in index.html');
+}
 
-// YAHAN APNA CONFIG PASTE KARO
-const firebaseConfig = {
-  apiKey: "AIzaSyC-25CvcxzGmFuw3wRg-T9U-eKPuckFw0c",
-  authDomain: "fototaker-studio.firebaseapp.com",
-  projectId: "fototaker-studio",
-  storageBucket: "fototaker-studio.firebasestorage.app",
-  messagingSenderId: "401638389477",
-  appId: "1:401638389477:web:a8af16d0f9b49bf8dc460c",
-  measurementId: "G-W4NT35YBQJ"
+// Export Firebase instances for use in other modules
+export const getFirestoreInstance = () => {
+    if (typeof firebase !== 'undefined' && firebase.firestore) {
+        return firebase.firestore();
+    }
+    return null;
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+export const getStorageInstance = () => {
+    if (typeof firebase !== 'undefined' && firebase.storage) {
+        return firebase.storage();
+    }
+    return null;
+};
 
-// Initialize Services
-export const db = getFirestore(app);
-export const storage = getStorage(app);
-
-export default app;
+export const getAuthInstance = () => {
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+        return firebase.auth();
+    }
+    return null;
+};
