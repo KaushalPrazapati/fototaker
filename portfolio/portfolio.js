@@ -1,4 +1,4 @@
-// Portfolio Page JavaScript - COMPLETELY FIXED
+// Portfolio Page JavaScript - COMPLETELY FIXED WITH VIDEOS
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Portfolio page loaded');
     
@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initNavigation();
     initPortfolioFilters();
     initPortfolioLoading();
+    loadVideosForPortfolio(); // ✅ Videos load karo
     
     // Make body visible
     document.body.classList.add('loaded');
@@ -166,8 +167,10 @@ function displayPortfolioPage() {
         } else {
             loadMoreBtn.style.display = 'inline-flex';
             loadMoreBtn.disabled = false;
-            document.getElementById('loadMoreSpinner').style.display = 'none';
-            document.getElementById('loadMoreText').textContent = 'Load More';
+            const loadMoreSpinner = document.getElementById('loadMoreSpinner');
+            const loadMoreText = document.getElementById('loadMoreText');
+            if (loadMoreSpinner) loadMoreSpinner.style.display = 'none';
+            if (loadMoreText) loadMoreText.textContent = 'Load More';
         }
     }
     
@@ -185,8 +188,8 @@ async function loadMorePortfolio() {
     
     try {
         loadMoreBtn.disabled = true;
-        loadMoreSpinner.style.display = 'inline-block';
-        loadMoreText.textContent = 'Loading...';
+        if (loadMoreSpinner) loadMoreSpinner.style.display = 'inline-block';
+        if (loadMoreText) loadMoreText.textContent = 'Loading...';
         
         // Simulate loading delay
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -198,8 +201,8 @@ async function loadMorePortfolio() {
         console.error('Error loading more portfolio items:', error);
         showNotification('Error loading more items', 'error');
         loadMoreBtn.disabled = false;
-        loadMoreSpinner.style.display = 'none';
-        loadMoreText.textContent = 'Load More';
+        if (loadMoreSpinner) loadMoreSpinner.style.display = 'none';
+        if (loadMoreText) loadMoreText.textContent = 'Load More';
     }
 }
 
@@ -250,17 +253,162 @@ function showDefaultPortfolio() {
         { category: 'wedding', title: 'Traditional Ceremony', description: 'Cultural wedding traditions', image: 'https://picsum.photos/400/600?random=9' },
         { category: 'pre-wedding', title: 'Beach Shoot', description: 'Sunset couple photos', image: 'https://picsum.photos/400/600?random=10' },
         { category: 'portrait', title: 'Maternity Shoot', description: 'Pregnancy photography', image: 'https://picsum.photos/400/600?random=11' },
-        { category: 'events', title: 'Anniversary Party', description: '25 years celebration', image: 'https://picsum.photos/400/600?random=12' },
-        { category: 'wedding', title: 'Reception Decor', description: 'Beautiful venue setup', image: 'https://picsum.photos/400/600?random=13' },
-        { category: 'pre-wedding', title: 'Winter Couple', description: 'Snowy romantic shoot', image: 'https://picsum.photos/400/600?random=14' },
-        { category: 'portrait', title: 'Newborn Photos', description: 'Baby photography session', image: 'https://picsum.photos/400/600?random=15' },
-        { category: 'events', title: 'Product Launch', description: 'Corporate product event', image: 'https://picsum.photos/400/600?random=16' }
+        { category: 'events', title: 'Anniversary Party', description: '25 years celebration', image: 'https://picsum.photos/400/600?random=12' }
     ];
     
     allPortfolioItems = defaultItems;
     filteredPortfolioItems = [...defaultItems];
     displayPortfolioPage();
 }
+
+// ==================== VIDEOS SECTION ====================
+
+// Videos Loading for Portfolio Page
+async function loadVideosForPortfolio() {
+    try {
+        const db = firebase.firestore();
+        const querySnapshot = await db.collection('videos')
+            .orderBy('createdAt', 'desc')
+            .limit(6)
+            .get();
+        
+        const videosGrid = document.getElementById('videosGrid');
+        
+        if (!videosGrid) {
+            console.log('Videos grid not found on this page');
+            return;
+        }
+        
+        if (querySnapshot.empty) {
+            videosGrid.innerHTML = '<p class="text-center">No videos available yet. Check back later!</p>';
+            return;
+        }
+        
+        const videosData = [];
+        querySnapshot.forEach((doc) => {
+            videosData.push({
+                id: doc.id,
+                ...doc.data()
+            });
+        });
+        
+        videosGrid.innerHTML = videosData.map(video => `
+            <div class="video-card">
+                <div class="video-thumbnail">
+                    <img src="${video.thumbnail}" alt="${video.title}" 
+                         onerror="this.src='https://picsum.photos/400/300?random=1'">
+                    <button class="video-play-btn" onclick="playVideo('${video.url}')">
+                        <i class="fas fa-play"></i>
+                    </button>
+                </div>
+                <div class="video-info">
+                    <h3>${video.title || 'Video'}</h3>
+                    <p>${video.description || ''}</p>
+                    <small>${getCategoryDisplayName(video.category)} • ${video.platform}</small>
+                </div>
+            </div>
+        `).join('');
+        
+        // Initialize video animations
+        initVideoAnimations();
+        
+    } catch (error) {
+        console.error('Error loading videos:', error);
+        const videosGrid = document.getElementById('videosGrid');
+        if (videosGrid) {
+            videosGrid.innerHTML = '<p class="text-center">Error loading videos. Please try again later.</p>';
+        }
+    }
+}
+
+// Video Play Function
+function playVideo(videoUrl) {
+    // Create modal
+    const modal = document.createElement('div');
+    modal.className = 'video-modal';
+    modal.style.display = 'flex';
+    
+    // Convert URLs to embed format
+    let embedUrl = videoUrl;
+    
+    // YouTube URL conversion
+    if (videoUrl.includes('youtube.com/watch?v=')) {
+        const videoId = videoUrl.split('v=')[1]?.split('&')[0];
+        embedUrl = `https://www.youtube.com/embed/${videoId}`;
+    } else if (videoUrl.includes('youtu.be/')) {
+        const videoId = videoUrl.split('youtu.be/')[1];
+        embedUrl = `https://www.youtube.com/embed/${videoId}`;
+    }
+    // Instagram URL (basic support)
+    else if (videoUrl.includes('instagram.com/p/') || videoUrl.includes('instagram.com/reel/')) {
+        embedUrl = videoUrl; // Instagram doesn't allow easy embedding
+    }
+    
+    modal.innerHTML = `
+        <div class="video-modal-content">
+            <button class="close-modal" onclick="this.parentElement.parentElement.remove()">&times;</button>
+            ${
+                embedUrl.includes('youtube.com/embed') 
+                ? `<iframe src="${embedUrl}?autoplay=1" 
+                          frameborder="0" 
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                          allowfullscreen>
+                   </iframe>`
+                : `<div style="padding: 2rem; text-align: center;">
+                      <p>This video cannot be embedded here.</p>
+                      <a href="${videoUrl}" target="_blank" class="btn btn-primary" style="margin-top: 1rem;">
+                          <i class="fas fa-external-link-alt"></i> Watch on ${videoUrl.includes('instagram') ? 'Instagram' : 'Original Platform'}
+                      </a>
+                   </div>`
+            }
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Close modal when clicking outside
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+    
+    // Close with Escape key
+    const closeWithEscape = function(e) {
+        if (e.key === 'Escape') {
+            modal.remove();
+            document.removeEventListener('keydown', closeWithEscape);
+        }
+    };
+    document.addEventListener('keydown', closeWithEscape);
+}
+
+// Initialize video animations
+function initVideoAnimations() {
+    const videoCards = document.querySelectorAll('.video-card');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry, index) => {
+            if (entry.isIntersecting) {
+                setTimeout(() => {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }, index * 150);
+            }
+        });
+    }, {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    });
+
+    videoCards.forEach(card => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(card);
+    });
+}
+
+// ==================== HELPER FUNCTIONS ====================
 
 // Helper function to get category display name
 function getCategoryDisplayName(category) {
@@ -284,6 +432,7 @@ function handleImageError(img) {
 
 // Notification system
 function showNotification(message, type = 'info') {
+    // Remove existing notification
     const existingNotification = document.querySelector('.notification');
     if (existingNotification) {
         existingNotification.remove();
@@ -298,43 +447,70 @@ function showNotification(message, type = 'info') {
         </div>
     `;
     
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${type === 'success' ? '#27ae60' : type === 'error' ? '#e74c3c' : '#3498db'};
-        color: white;
-        padding: 15px 20px;
-        border-radius: 8px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        z-index: 10000;
-        max-width: 400px;
-        animation: slideInRight 0.3s ease;
-    `;
+    // Add styles if not exists
+    if (!document.querySelector('#notification-styles')) {
+        const styles = document.createElement('style');
+        styles.id = 'notification-styles';
+        styles.textContent = `
+            .notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #27ae60;
+                color: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                z-index: 10000;
+                max-width: 400px;
+                animation: slideInRight 0.3s ease;
+            }
+            .notification-error { background: #e74c3c; }
+            .notification-warning { background: #f39c12; }
+            .notification-info { background: #3498db; }
+            .notification-content {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .notification-close {
+                background: none;
+                border: none;
+                color: white;
+                font-size: 18px;
+                cursor: pointer;
+                margin-left: 10px;
+            }
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOutRight {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(styles);
+    }
     
+    document.body.appendChild(notification);
+    
+    // Close button event
     const closeBtn = notification.querySelector('.notification-close');
-    closeBtn.style.cssText = `
-        background: none;
-        border: none;
-        color: white;
-        font-size: 18px;
-        cursor: pointer;
-        margin-left: 10px;
-    `;
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+            notification.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        });
+    }
     
-    closeBtn.addEventListener('click', () => {
-        notification.style.animation = 'slideOutRight 0.3s ease';
-        setTimeout(() => notification.remove(), 300);
-    });
-    
+    // Auto remove after 5 seconds
     setTimeout(() => {
         if (notification.parentElement) {
             notification.style.animation = 'slideOutRight 0.3s ease';
             setTimeout(() => notification.remove(), 300);
         }
     }, 5000);
-    
-    document.body.appendChild(notification);
 }
 
 // Theme Management
@@ -359,8 +535,6 @@ function initTheme() {
     
     // Apply theme function
     const applyTheme = (theme) => {
-        console.log('Applying theme:', theme);
-        
         if (theme === 'dark') {
             body.classList.add('dark-theme');
             body.classList.remove('light-theme');
@@ -426,6 +600,23 @@ function initNavigation() {
             closeMobileMenu();
         });
     });
+    
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href');
+            if (targetId === '#') return;
+            
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
+                targetElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
 }
 
 // WhatsApp integration for portfolio page
@@ -444,3 +635,9 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     });
 });
+
+// Make functions globally available
+window.loadMorePortfolio = loadMorePortfolio;
+window.playVideo = playVideo;
+window.openWhatsApp = openWhatsApp;
+window.handleImageError = handleImageError;
