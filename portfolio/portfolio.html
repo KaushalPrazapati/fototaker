@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+
+    <title>Portfolio - FotoTaker Studio</title>
+    
+    <meta name="description" content="View our complete portfolio - Wedding photography, pre-wedding shoots, candid photography, videography, and Instagram reels.">
+    
+    <link rel="stylesheet" href="portfolio.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600;700&family=Poiret+One&display=swap" rel="stylesheet">
+</head>
+<body class="light-theme">
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="../index.html" style="text-decoration: none; display: flex; align-items: center; gap: 1rem; color: inherit;">
+                    <img src="../image/logo.png" alt="FotoTaker Logo" class="logo-img">
+                    <h2 class="logo-text">FotoTaker</h2>
+                </a>
+            </div>
+            <div class="nav-menu" id="navMenu">
+                <a href="../index.html" class="nav-link box-link">Home</a>
+                <a href="#portfolio" class="nav-link box-link active">Portfolio</a>
+                <a href="../index.html#services" class="nav-link box-link">Services</a>
+                <a href="../index.html#booking" class="nav-link box-link">Book Now</a>
+                <a href="../index.html#about" class="nav-link box-link">About</a>
+                <a href="../index.html#contact" class="nav-link box-link">Contact</a>
+                <button id="themeToggle" class="nav-theme-btn box-theme">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+            <div class="nav-toggle" id="navToggle">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Portfolio Header -->
+    <section class="portfolio-header">
+        <div class="container">
+            <h1>Our Complete Portfolio</h1>
+            <p>Explore our extensive collection of photography and videography work</p>
+            
+            <!-- Filter Buttons -->
+            <div class="portfolio-filters" id="portfolioFilters">
+                <button class="filter-btn active" data-filter="all">All Work</button>
+                <button class="filter-btn" data-filter="wedding">Wedding</button>
+                <button class="filter-btn" data-filter="pre-wedding">Pre-Wedding</button>
+                <button class="filter-btn" data-filter="portrait">Portrait</button>
+                <button class="filter-btn" data-filter="events">Events</button>
+                <button class="filter-btn" data-filter="reels">Instagram Reels</button>
+                <button class="filter-btn" data-filter="videos">Videos</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Portfolio Grid -->
+    <section id="portfolio" class="portfolio-main">
+        <div class="container">
+            <div class="portfolio-grid-full" id="portfolioGridFull">
+                <div class="loading">Loading portfolio...</div>
+            </div>
+            
+            <!-- Load More Button -->
+            <div class="load-more-container">
+                <button id="loadMoreBtn" class="btn btn-primary">
+                    <i class="fas fa-spinner fa-spin" id="loadMoreSpinner" style="display: none;"></i>
+                    Load More
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Video/Reels Section -->
+    <section class="videos-section">
+        <div class="container">
+            <h2 class="section-title">Instagram Reels & Videos</h2>
+            <p class="section-subtitle">Watch our latest video content and Instagram reels</p>
+            
+            <div class="videos-grid" id="videosGrid">
+                <div class="loading">Loading videos...</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="portfolio-cta">
+        <div class="container">
+            <div class="cta-content">
+                <h2>Ready to Create Your Own Story?</h2>
+                <p>Let us capture your special moments with the same passion and creativity</p>
+                <div class="cta-buttons">
+                    <a href="../index.html#booking" class="btn btn-primary btn-large">
+                        <i class="fas fa-calendar-check"></i> Book Your Session
+                    </a>
+                    <button onclick="openWhatsApp('Hello! I want to book a photography session')" class="btn btn-secondary btn-large">
+                        <i class="fab fa-whatsapp"></i> WhatsApp Now
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <div class="footer-logo">
+                        <img src="../logo.png" alt="FotoTaker Logo" class="logo-img">
+                        <p>Professional Photography & Videography Services</p>
+                    </div>
+                    <div class="footer-links">
+                        <a href="../index.html">Home</a>
+                        <a href="#portfolio">Portfolio</a>
+                        <a href="../index.html#services">Services</a>
+                        <a href="../index.html#booking">Booking</a>
+                        <a href="../index.html#about">About</a>
+                        <a href="../index.html#contact">Contact</a>
+                    </div>
+                </div>
+                <div class="social-links">
+                    <a href="https://instagram.com/fototakerkd" target="_blank" class="social-link">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="https://facebook.com/fototaker" target="_blank" class="social-link">
+                        <i class="fab fa-facebook"></i>
+                    </a>
+                    <a href="https://wa.me/919471640485" target="_blank" class="social-link">
+                        <i class="fab fa-whatsapp"></i>
+                    </a>
+                    <a href="https://youtube.com/fototaker" target="_blank" class="social-link">
+                        <i class="fab fa-youtube"></i>
+                    </a>
+                </div>
+            </div>
+            <p class="copyright">&copy; 2025 FotoTaker. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Firebase Configuration -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyC-25CvcxzGmFuw3wRg-T9U-eKPuckFw0c",
+            authDomain: "fototaker-studio.firebaseapp.com",
+            projectId: "fototaker-studio",
+            storageBucket: "fototaker-studio.firebasestorage.app",
+            messagingSenderId: "401638389477",
+            appId: "1:401638389477:web:a8af16d0f9b49bf8dc460c",
+            measurementId: "G-W4NT35YBQJ"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+    </script>
+
+    <script src="portfolio.js"></script>
+</body>
+</html>
