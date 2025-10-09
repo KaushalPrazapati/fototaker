@@ -94,34 +94,83 @@
             </section>
 
             <!-- Videos Management -->
-            <section id="videos" class="admin-section">
-                <div class="section-header">
-                    <h2>Videos Management</h2>
-                    <button id="addVideoBtn" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Add New Video
-                    </button>
-                </div>
+<section id="videos" class="admin-section">
+    <div class="section-header">
+        <h2>Videos Management</h2>
+        <button id="addVideoBtn" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add New Video
+        </button>
+    </div>
 
+    <!-- Add/Edit Video Form -->
+    <div id="videoForm" class="form-container" style="display: none;">
+        <h3 id="videoFormTitle">Add Video/Reel</h3>
+        <form id="videoItemForm">
+            <input type="hidden" id="videoId">
+            <div class="form-group">
+                <label>Title *</label>
+                <input type="text" id="videoTitle" required placeholder="Enter video title">
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="videoDescription" rows="3" placeholder="Enter video description (optional)"></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Video URL *</label>
+                    <input type="url" id="videoUrl" required placeholder="https://youtube.com/embed/... or https://instagram.com/p/...">
+                </div>
+                <div class="form-group">
+                    <label>Thumbnail URL *</label>
+                    <input type="url" id="videoThumbnail" required placeholder="https://example.com/thumbnail.jpg">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Category *</label>
+                    <select id="videoCategory" required>
+                        <option value="">Select Category</option>
+                        <option value="wedding">Wedding</option>
+                        <option value="pre-wedding">Pre-Wedding</option>
+                        <option value="portrait">Portrait</option>
+                        <option value="events">Events</option>
+                        <option value="reels">Instagram Reels</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Platform</label>
+                    <select id="videoPlatform">
+                        <option value="youtube">YouTube</option>
+                        <option value="instagram">Instagram</option>
+                        <option value="website">Website</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-success">Save Video</button>
+                <button type="button" class="btn btn-secondary" onclick="hideVideoForm()">Cancel</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Videos List -->
+    <div class="admin-table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Thumbnail</th>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Platform</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="videosList">
                 <!-- Videos will be loaded here -->
-                <div class="admin-table-container">
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>Title</th>
-                                <th>Category</th>
-                                <th>Platform</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="videosList">
-                            <tr>
-                                <td colspan="4" class="text-center">No videos added yet</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
+            </tbody>
+        </table>
+    </div>
+</section>
             <!-- Bookings Management -->
             <section id="bookings" class="admin-section">
                 <div class="section-header">
@@ -206,3 +255,4 @@
     <script src="admin-script.js"></script>
 </body>
 </html>
+
