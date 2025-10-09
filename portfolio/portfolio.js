@@ -14,6 +14,9 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Portfolio page initialized');
 });
 
+// Global variable to track current video
+let currentVideoUrl = '';
+
 // Firebase Initialization
 function initFirebase() {
     // Your Firebase configuration
@@ -278,26 +281,11 @@ function handleUnsupportedVideo(url, title) {
 
 // Initialize video modal - UPDATED
 function initVideoModal() {
-    // Check if modal already exists
-    let modal = document.querySelector('.video-modal');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.className = 'video-modal';
-        modal.innerHTML = `
-            <div class="video-modal-content">
-                <button class="close-modal">&times;</button>
-                <h3 class="video-modal-title">Video</h3>
-                <video controls>
-                    Your browser does not support the video tag.
-                </video>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-    }
+    // Modal already exists in HTML, just initialize events
+    const modal = document.querySelector('.video-modal');
+    const closeBtn = modal.querySelector('.close-modal');
     
     // Close modal events
-    const closeBtn = modal.querySelector('.close-modal');
     closeBtn.addEventListener('click', closeVideoModal);
     
     modal.addEventListener('click', function(e) {
@@ -314,6 +302,16 @@ function initVideoModal() {
     });
 }
 
+// Open current video in new tab - NEW FUNCTION
+function openCurrentVideoInNewTab() {
+    if (currentVideoUrl) {
+        window.open(currentVideoUrl, '_blank');
+        closeVideoModal();
+    } else {
+        showNotification('No video available to open', 'error');
+    }
+}
+
 // Play video in modal - UPDATED
 function playVideo(videoUrl, videoTitle = 'Video') {
     const modal = document.querySelector('.video-modal');
@@ -321,6 +319,9 @@ function playVideo(videoUrl, videoTitle = 'Video') {
     const modalTitle = modal.querySelector('.video-modal-title');
     
     if (modal && video) {
+        // Store current video URL globally
+        currentVideoUrl = videoUrl;
+        
         // Set video title
         if (modalTitle) {
             modalTitle.textContent = videoTitle;
@@ -355,17 +356,12 @@ function playVideo(videoUrl, videoTitle = 'Video') {
             playPromise.catch(e => {
                 console.log('Video play failed:', e);
                 showNotification(`Cannot play "${videoTitle}". The video format may not be supported.`, 'error');
-                
-                // Close modal after error
-                setTimeout(() => {
-                    closeVideoModal();
-                }, 3000);
             });
         }
     }
 }
 
-// Close video modal
+// Close video modal - UPDATED
 function closeVideoModal() {
     const modal = document.querySelector('.video-modal');
     const video = modal.querySelector('video');
@@ -373,6 +369,7 @@ function closeVideoModal() {
     if (modal && video) {
         video.pause();
         video.src = '';
+        currentVideoUrl = ''; // Clear current video URL
         modal.style.display = 'none';
         document.body.style.overflow = 'auto';
     }
