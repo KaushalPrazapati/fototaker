@@ -1,4 +1,4 @@
-// Portfolio Page JavaScript - COMPLETELY FIXED WITH VIDEOS
+// Portfolio Page JavaScript - COMPLETELY FIXED WITH PLATFORM-BASED VIDEO DISPLAY
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Portfolio page loaded');
     
@@ -261,7 +261,7 @@ function showDefaultPortfolio() {
     displayPortfolioPage();
 }
 
-// ==================== VIDEOS SECTION ====================
+// ==================== VIDEOS SECTION - PLATFORM BASED DISPLAY ====================
 
 // Videos Loading for Portfolio Page
 async function loadVideosForPortfolio() {
@@ -292,22 +292,33 @@ async function loadVideosForPortfolio() {
             });
         });
         
-        videosGrid.innerHTML = videosData.map(video => `
-            <div class="video-card">
-                <div class="video-thumbnail">
-                    <img src="${video.thumbnail}" alt="${video.title}" 
-                         onerror="this.src='https://picsum.photos/400/300?random=1'">
-                    <button class="video-play-btn" onclick="playVideo('${video.url}')">
-                        <i class="fas fa-play"></i>
-                    </button>
+        videosGrid.innerHTML = videosData.map(video => {
+            // Platform-based styling
+            const isReel = video.platform === 'instagram' || video.platform === 'reels';
+            const videoClass = isReel ? 'video-card reel-video' : 'video-card youtube-video';
+            const aspectRatio = isReel ? 'aspect-ratio-9-16' : 'aspect-ratio-16-9';
+            
+            return `
+                <div class="${videoClass}">
+                    <div class="video-thumbnail ${aspectRatio}">
+                        <img src="${video.thumbnail}" alt="${video.title}" 
+                             onerror="this.src='https://picsum.photos/${isReel ? '300/500' : '400/300'}?random=1'">
+                        <button class="video-play-btn" onclick="playVideo('${video.url}', '${video.platform}')">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <div class="video-platform-badge ${video.platform}">
+                            <i class="fab fa-${video.platform === 'youtube' ? 'youtube' : 'instagram'}"></i>
+                            ${video.platform === 'youtube' ? 'YouTube' : 'Reel'}
+                        </div>
+                    </div>
+                    <div class="video-info">
+                        <h3>${video.title || 'Video'}</h3>
+                        <p>${video.description || ''}</p>
+                        <small>${getCategoryDisplayName(video.category)}</small>
+                    </div>
                 </div>
-                <div class="video-info">
-                    <h3>${video.title || 'Video'}</h3>
-                    <p>${video.description || ''}</p>
-                    <small>${getCategoryDisplayName(video.category)} • ${video.platform}</small>
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
         
         // Initialize video animations
         initVideoAnimations();
@@ -321,46 +332,60 @@ async function loadVideosForPortfolio() {
     }
 }
 
-// Video Play Function
-function playVideo(videoUrl) {
+// Video Play Function - Platform based modal
+function playVideo(videoUrl, platform) {
     // Create modal
     const modal = document.createElement('div');
     modal.className = 'video-modal';
     modal.style.display = 'flex';
     
+    const isReel = platform === 'instagram' || platform === 'reels';
+    
     // Convert URLs to embed format
     let embedUrl = videoUrl;
+    let modalClass = isReel ? 'reel-modal' : 'youtube-modal';
     
     // YouTube URL conversion
     if (videoUrl.includes('youtube.com/watch?v=')) {
         const videoId = videoUrl.split('v=')[1]?.split('&')[0];
-        embedUrl = `https://www.youtube.com/embed/${videoId}`;
+        embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
     } else if (videoUrl.includes('youtu.be/')) {
         const videoId = videoUrl.split('youtu.be/')[1];
-        embedUrl = `https://www.youtube.com/embed/${videoId}`;
+        embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
     }
-    // Instagram URL (basic support)
+    // Instagram Reel URL
     else if (videoUrl.includes('instagram.com/p/') || videoUrl.includes('instagram.com/reel/')) {
-        embedUrl = videoUrl; // Instagram doesn't allow easy embedding
+        embedUrl = videoUrl;
+        modalClass = 'reel-modal';
     }
     
     modal.innerHTML = `
-        <div class="video-modal-content">
-            <button class="close-modal" onclick="this.parentElement.parentElement.remove()">&times;</button>
-            ${
-                embedUrl.includes('youtube.com/embed') 
-                ? `<iframe src="${embedUrl}?autoplay=1" 
-                          frameborder="0" 
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                          allowfullscreen>
-                   </iframe>`
-                : `<div style="padding: 2rem; text-align: center;">
-                      <p>This video cannot be embedded here.</p>
-                      <a href="${videoUrl}" target="_blank" class="btn btn-primary" style="margin-top: 1rem;">
-                          <i class="fas fa-external-link-alt"></i> Watch on ${videoUrl.includes('instagram') ? 'Instagram' : 'Original Platform'}
-                      </a>
-                   </div>`
-            }
+        <div class="video-modal-content ${modalClass}">
+            <button class="close-modal" onclick="this.parentElement.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="modal-header">
+                <h3>${isReel ? 'Instagram Reel' : 'YouTube Video'}</h3>
+            </div>
+            <div class="modal-video-container">
+                ${
+                    embedUrl.includes('youtube.com/embed') 
+                    ? `<iframe src="${embedUrl}" 
+                              frameborder="0" 
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                              allowfullscreen>
+                       </iframe>`
+                    : `<div class="external-video-link">
+                          <div class="video-placeholder">
+                              <i class="fab fa-${isReel ? 'instagram' : 'video'}"></i>
+                              <p>This ${isReel ? 'Instagram Reel' : 'video'} cannot be embedded here.</p>
+                              <a href="${videoUrl}" target="_blank" class="btn btn-primary">
+                                  <i class="fas fa-external-link-alt"></i> Watch on ${isReel ? 'Instagram' : 'Original Platform'}
+                              </a>
+                          </div>
+                       </div>`
+                }
+            </div>
         </div>
     `;
     
