@@ -14,11 +14,11 @@
     <meta name="msapplication-TileColor" content="#da532c">
     <meta name="msapplication-config" content="../image/favicon/browserconfig.xml">
     <meta name="theme-color" content="#ffffff">
-
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    
+    <!-- Firebase CDN -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
     
     <title>Admin Dashboard - FotoTaker</title>
     <link rel="stylesheet" href="admin-style.css">
@@ -31,9 +31,7 @@
             <h1>FotoTaker Admin Panel</h1>
             <div class="admin-actions">
                 <span>Welcome, Admin</span>
-                <button id="logoutBtn" class="btn btn-logout">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </button>
+                <button id="logoutBtn" class="btn btn-logout">Logout</button>
             </div>
         </div>
     </header>
@@ -44,8 +42,8 @@
         <nav class="admin-sidebar">
             <ul class="sidebar-menu">
                 <li><a href="#portfolio" class="active"><i class="fas fa-images"></i> Portfolio</a></li>
+                <li><a href="#videos"><i class="fas fa-video"></i> Videos/Reels</a></li>
                 <li><a href="#services"><i class="fas fa-cogs"></i> Services</a></li>
-                <li><a href="#content"><i class="fas fa-edit"></i> Content</a></li>
                 <li><a href="#settings"><i class="fas fa-cog"></i> Settings</a></li>
             </ul>
         </nav>
@@ -82,33 +80,21 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Image</label>
+                            <label>Image URL</label>
                             <div class="file-upload-group">
-                                <input type="text" id="itemImage" placeholder="Image URL or upload file" required>
-                                <div style="display: flex; gap: 10px; margin-top: 10px;">
-                                    <button type="button" class="btn btn-secondary" onclick="openImageUpload()">
-                                        <i class="fas fa-link"></i> Add URL
-                                    </button>
-                                    <button type="button" class="btn btn-success" onclick="openFileUpload()">
-                                        <i class="fas fa-upload"></i> Upload to ImgBB
-                                    </button>
-                                </div>
+                                <input type="text" id="itemImage" placeholder="Paste image URL">
+                                <button type="button" class="btn btn-secondary" onclick="openImageUpload()">
+                                    <i class="fas fa-upload"></i> Upload
+                                </button>
                             </div>
-                            <small style="color: #666; font-size: 12px; margin-top: 5px; display: block;">
-                                Choose either: Paste image URL OR Upload file directly
-                            </small>
                         </div>
                         <div class="form-group">
                             <label>Description</label>
                             <textarea id="itemDescription" rows="3"></textarea>
                         </div>
                         <div class="form-actions">
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-save"></i> Save Item
-                            </button>
-                            <button type="button" class="btn btn-secondary" onclick="hidePortfolioForm()">
-                                <i class="fas fa-times"></i> Cancel
-                            </button>
+                            <button type="submit" class="btn btn-success">Save Item</button>
+                            <button type="button" class="btn btn-secondary" onclick="hidePortfolioForm()">Cancel</button>
                         </div>
                     </form>
                 </div>
@@ -119,26 +105,97 @@
                 </div>
             </section>
 
+            <!-- Videos/Reels Management -->
+            <section id="videos" class="admin-section">
+                <div class="section-header">
+                    <h2>Videos/Reels Management</h2>
+                    <button id="addVideoBtn" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add New Video
+                    </button>
+                </div>
+
+                <!-- Add/Edit Video Form -->
+                <div id="videoForm" class="form-container" style="display: none;">
+                    <h3 id="videoFormTitle">Add Video/Reel</h3>
+                    <form id="videoItemForm">
+                        <input type="hidden" id="videoId">
+                        <div class="form-group">
+                            <label>Title *</label>
+                            <input type="text" id="videoTitle" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea id="videoDescription" rows="3" placeholder="Enter video description"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Video URL *</label>
+                                <input type="url" id="videoUrl" required placeholder="https://example.com/video.mp4">
+                            </div>
+                            <div class="form-group">
+                                <label>Thumbnail URL *</label>
+                                <input type="url" id="videoThumbnail" required placeholder="https://example.com/thumbnail.jpg">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Category *</label>
+                                <select id="videoCategory" required>
+                                    <option value="">Select Category</option>
+                                    <option value="wedding">Wedding</option>
+                                    <option value="pre-wedding">Pre-Wedding</option>
+                                    <option value="portrait">Portrait</option>
+                                    <option value="events">Events</option>
+                                    <option value="reels">Instagram Reels</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Duration</label>
+                                <input type="text" id="videoDuration" placeholder="0:30">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Platform</label>
+                            <select id="videoPlatform">
+                                <option value="instagram">Instagram</option>
+                                <option value="youtube">YouTube</option>
+                                <option value="website">Website</option>
+                            </select>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-success">Save Video</button>
+                            <button type="button" class="btn btn-secondary" onclick="hideVideoForm()">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Videos List -->
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Thumbnail</th>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th>Duration</th>
+                                <th>Platform</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="videosList">
+                            <!-- Videos will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
             <!-- Services Management -->
             <section id="services" class="admin-section">
                 <div class="section-header">
                     <h2>Services Management</h2>
-                    <button class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Add Service
-                    </button>
                 </div>
-                <div class="form-container">
+                <div class="services-list">
                     <p>Services management coming soon...</p>
-                </div>
-            </section>
-
-            <!-- Content Management -->
-            <section id="content" class="admin-section">
-                <div class="section-header">
-                    <h2>Content Management</h2>
-                </div>
-                <div class="form-container">
-                    <p>Content editor coming soon...</p>
                 </div>
             </section>
 
@@ -147,60 +204,34 @@
                 <div class="section-header">
                     <h2>Settings</h2>
                 </div>
-                <div class="form-container">
+                <div class="settings-content">
                     <div class="form-group">
-                        <label>Change Admin Password</label>
-                        <input type="password" id="adminPassword" placeholder="Enter new password">
-                        <button class="btn btn-primary" style="margin-top: 10px;">
-                            <i class="fas fa-key"></i> Update Password
-                        </button>
+                        <label>Admin Password</label>
+                        <input type="password" id="adminPassword" placeholder="Change password">
+                        <button class="btn btn-primary">Update Password</button>
                     </div>
                 </div>
             </section>
         </main>
     </div>
 
-    <!-- File Upload Modal -->
+    <!-- Image Upload Modal -->
     <div id="imageUploadModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Upload Image File</h3>
+                <h3>Upload Image</h3>
                 <span class="close">&times;</span>
             </div>
             <div class="modal-body">
-                <div class="form-group">
-                    <label>Select Image File (Max 5MB)</label>
-                    <input type="file" id="imageFile" accept="image/*">
-                </div>
+                <input type="file" id="imageFile" accept="image/*">
                 <div class="upload-preview">
-                    <img id="imagePreview" src="" alt="Preview" style="max-width: 100%; max-height: 200px; display: none;">
+                    <img id="imagePreview" src="" alt="Preview">
                 </div>
-                <button id="uploadImageBtn" class="btn btn-primary" style="margin-top: 15px;">
-                    <i class="fas fa-upload"></i> Upload to ImgBB
-                </button>
+                <button id="uploadImageBtn" class="btn btn-primary">Upload</button>
             </div>
         </div>
     </div>
 
-    <!-- Firebase Configuration -->
-    <script>
-        // Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyC-25CvcxzGmFuw3wRg-T9U-eKPuckFw0c",
-            authDomain: "fototaker-studio.firebaseapp.com",
-            projectId: "fototaker-studio",
-            storageBucket: "fototaker-studio.firebasestorage.app",
-            messagingSenderId: "401638389477",
-            appId: "1:401638389477:web:a8af16d0f9b49bf8dc460c",
-            measurementId: "G-W4NT35YBQJ"
-        };
-
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-    </script>
-
     <script src="admin-script.js"></script>
 </body>
 </html>
-
-
