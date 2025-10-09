@@ -10,8 +10,8 @@ document.addEventListener('DOMContentLoaded', function() {
     initBookingSystem();
     initContactForm();
     
-    // Load portfolio from Firebase
-    loadPortfolioFromFirebase();
+    // Load limited portfolio for home page (only 6 items)
+    loadLimitedPortfolio();
     
     console.log('Website initialized successfully');
 });
@@ -190,17 +190,20 @@ function initNavigation() {
 }
 
 // Portfolio System
-async function loadPortfolioFromFirebase() {
+// Load limited portfolio for home page
+async function loadLimitedPortfolio() {
     const portfolioGrid = document.querySelector('.portfolio-grid');
     
     if (!portfolioGrid) return;
     
     try {
-        // Use global firebase object
         const db = firebase.firestore();
-        const querySnapshot = await db.collection('portfolio').get();
-        const portfolioData = [];
+        const querySnapshot = await db.collection('portfolio')
+            .orderBy('createdAt', 'desc')
+            .limit(6)
+            .get();
         
+        const portfolioData = [];
         querySnapshot.forEach((doc) => {
             portfolioData.push({
                 id: doc.id,
@@ -208,19 +211,13 @@ async function loadPortfolioFromFirebase() {
             });
         });
         
-        // Sort by creation date (newest first)
-        portfolioData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        
         if (portfolioData.length > 0) {
             displayPortfolioItems(portfolioData);
-            console.log('Portfolio loaded from Firebase - Items:', portfolioData.length);
         } else {
-            // No data in Firebase, show default portfolio
             displayDefaultPortfolio();
         }
     } catch (error) {
-        console.log('Error loading from Firebase:', error);
-        // Show default portfolio if Firebase fails
+        console.log('Error loading portfolio:', error);
         displayDefaultPortfolio();
     }
 }
