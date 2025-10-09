@@ -3,6 +3,8 @@ const IMGBB_API_KEY = 'e473f5abe25409c5e97480f6a03bb992';
 
 // Admin Login System
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Admin system initializing...');
+    
     // Check if user is already logged in
     if (localStorage.getItem('adminLoggedIn') === 'true' && 
         window.location.pathname.includes('admin-login.html')) {
@@ -18,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             
-            // Simple authentication (in real app, use secure backend)
+            // Simple authentication
             if (username === 'admin' && password === 'password123') {
                 localStorage.setItem('adminLoggedIn', 'true');
                 window.location.href = 'admin-dashboard.html';
@@ -45,6 +47,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Admin Dashboard Functions
 function initAdminDashboard() {
+    console.log('Initializing admin dashboard...');
+    
     // Check authentication
     if (localStorage.getItem('adminLoggedIn') !== 'true') {
         window.location.href = 'admin-login.html';
@@ -59,24 +63,34 @@ function initAdminDashboard() {
     initPortfolioManagement();
     initVideosManagement();
     initModals();
+    
+    console.log('Admin dashboard initialized successfully');
 }
 
-// Firebase Initialization
+// Firebase Initialization - FIXED
 function initFirebase() {
-    // Your Firebase configuration
-    const firebaseConfig = {
-        apiKey: "AIzaSyC-25CvcxzGmFuw3wRg-T9U-eKPuckFw0c",
-        authDomain: "fototaker-studio.firebaseapp.com",
-        projectId: "fototaker-studio",
-        storageBucket: "fototaker-studio.firebasestorage.app",
-        messagingSenderId: "401638389477",
-        appId: "1:401638389477:web:a8af16d0f9b49bf8dc460c",
-        measurementId: "G-W4NT35YBQJ"
-    };
+    try {
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyC-25CvcxzGmFuw3wRg-T9U-eKPuckFw0c",
+            authDomain: "fototaker-studio.firebaseapp.com",
+            projectId: "fototaker-studio",
+            storageBucket: "fototaker-studio.firebasestorage.app",
+            messagingSenderId: "401638389477",
+            appId: "1:401638389477:web:a8af16d0f9b49bf8dc460c",
+            measurementId: "G-W4NT35YBQJ"
+        };
 
-    // Initialize Firebase
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
+        // Initialize Firebase only if not already initialized
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+            console.log('Firebase initialized successfully');
+        } else {
+            console.log('Firebase already initialized');
+        }
+    } catch (error) {
+        console.error('Firebase initialization error:', error);
+        showNotification('Firebase connection failed. Please check console.', 'error');
     }
 }
 
@@ -105,10 +119,10 @@ function initNavigation() {
     });
 }
 
-// Portfolio Management
+// Portfolio Management - FIXED (LocalStorage based)
 function initPortfolioManagement() {
     const addBtn = document.getElementById('addPortfolioBtn');
-    const portfolioForm = document.getElementById('portfolioForm');
+    const portfolioForm = document.getElementById('portfolioItemForm');
     
     // Load existing portfolio items
     loadPortfolioItems();
@@ -121,9 +135,8 @@ function initPortfolioManagement() {
     }
     
     // Portfolio form submission
-    const portfolioFormElement = document.getElementById('portfolioItemForm');
-    if (portfolioFormElement) {
-        portfolioFormElement.addEventListener('submit', function(e) {
+    if (portfolioForm) {
+        portfolioForm.addEventListener('submit', function(e) {
             e.preventDefault();
             savePortfolioItem();
         });
@@ -133,20 +146,24 @@ function initPortfolioManagement() {
 function showPortfolioForm(item = null) {
     const form = document.getElementById('portfolioForm');
     const formTitle = document.getElementById('formTitle');
-    const formElement = document.getElementById('portfolioItemForm');
+    
+    if (!form) {
+        console.error('Portfolio form not found');
+        return;
+    }
     
     if (item) {
         // Edit mode
         formTitle.textContent = 'Edit Portfolio Item';
         document.getElementById('itemId').value = item.id;
-        document.getElementById('itemTitle').value = item.title;
-        document.getElementById('itemCategory').value = item.category;
-        document.getElementById('itemImage').value = item.image;
+        document.getElementById('itemTitle').value = item.title || '';
+        document.getElementById('itemCategory').value = item.category || '';
+        document.getElementById('itemImage').value = item.image || '';
         document.getElementById('itemDescription').value = item.description || '';
     } else {
         // Add mode
         formTitle.textContent = 'Add Portfolio Item';
-        formElement.reset();
+        document.getElementById('portfolioItemForm').reset();
         document.getElementById('itemId').value = '';
     }
     
@@ -155,7 +172,10 @@ function showPortfolioForm(item = null) {
 }
 
 function hidePortfolioForm() {
-    document.getElementById('portfolioForm').style.display = 'none';
+    const form = document.getElementById('portfolioForm');
+    if (form) {
+        form.style.display = 'none';
+    }
 }
 
 function savePortfolioItem() {
@@ -165,6 +185,11 @@ function savePortfolioItem() {
     const image = document.getElementById('itemImage').value;
     const description = document.getElementById('itemDescription').value;
     
+    if (!title || !category || !image) {
+        showNotification('Please fill all required fields', 'error');
+        return;
+    }
+    
     // Get existing portfolio data
     let portfolioData = JSON.parse(localStorage.getItem('portfolioData')) || [];
     
@@ -172,7 +197,14 @@ function savePortfolioItem() {
         // Update existing item
         const index = portfolioData.findIndex(item => item.id == itemId);
         if (index !== -1) {
-            portfolioData[index] = { id: itemId, title, category, image, description };
+            portfolioData[index] = { 
+                id: itemId, 
+                title, 
+                category, 
+                image, 
+                description,
+                createdAt: portfolioData[index].createdAt || new Date().toISOString()
+            };
         }
     } else {
         // Add new item
@@ -181,7 +213,8 @@ function savePortfolioItem() {
             title,
             category,
             image,
-            description
+            description,
+            createdAt: new Date().toISOString()
         };
         portfolioData.push(newItem);
     }
@@ -200,31 +233,35 @@ function loadPortfolioItems() {
     const portfolioGrid = document.querySelector('.portfolio-grid-admin');
     const portfolioData = JSON.parse(localStorage.getItem('portfolioData')) || [];
     
-    if (portfolioGrid) {
-        if (portfolioData.length === 0) {
-            portfolioGrid.innerHTML = '<p>No portfolio items yet. Click "Add New Item" to get started.</p>';
-            return;
-        }
-        
-        portfolioGrid.innerHTML = portfolioData.map(item => `
-            <div class="portfolio-item-admin">
-                <img src="${item.image}" alt="${item.title}" onerror="this.src='https://picsum.photos/400/300?random=1'">
-                <div class="item-details">
-                    <h4>${item.title}</h4>
-                    <p><strong>Category:</strong> ${item.category}</p>
-                    <p>${item.description || 'No description'}</p>
-                    <div class="item-actions">
-                        <button class="btn btn-primary" onclick="editPortfolioItem('${item.id}')">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>
-                        <button class="btn btn-logout" onclick="deletePortfolioItem('${item.id}')">
-                            <i class="fas fa-trash"></i> Delete
-                        </button>
-                    </div>
+    if (!portfolioGrid) {
+        console.error('Portfolio grid not found');
+        return;
+    }
+    
+    if (portfolioData.length === 0) {
+        portfolioGrid.innerHTML = '<p>No portfolio items yet. Click "Add New Item" to get started.</p>';
+        return;
+    }
+    
+    portfolioGrid.innerHTML = portfolioData.map(item => `
+        <div class="portfolio-item-admin">
+            <img src="${item.image}" alt="${item.title}" 
+                 onerror="this.src='https://picsum.photos/400/300?random=1'">
+            <div class="item-details">
+                <h4>${item.title || 'Untitled'}</h4>
+                <p><strong>Category:</strong> ${item.category || 'Uncategorized'}</p>
+                <p>${item.description || 'No description'}</p>
+                <div class="item-actions">
+                    <button class="btn btn-primary" onclick="editPortfolioItem('${item.id}')">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="btn btn-logout" onclick="deletePortfolioItem('${item.id}')">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
                 </div>
             </div>
-        `).join('');
-    }
+        </div>
+    `).join('');
 }
 
 function editPortfolioItem(id) {
@@ -233,22 +270,30 @@ function editPortfolioItem(id) {
     
     if (item) {
         showPortfolioForm(item);
+    } else {
+        showNotification('Item not found', 'error');
     }
 }
 
 function deletePortfolioItem(id) {
-    if (confirm('Are you sure you want to delete this item?')) {
-        let portfolioData = JSON.parse(localStorage.getItem('portfolioData')) || [];
-        portfolioData = portfolioData.filter(item => item.id !== id);
-        
+    if (!confirm('Are you sure you want to delete this item?')) {
+        return;
+    }
+    
+    let portfolioData = JSON.parse(localStorage.getItem('portfolioData')) || [];
+    const initialLength = portfolioData.length;
+    portfolioData = portfolioData.filter(item => item.id !== id);
+    
+    if (portfolioData.length < initialLength) {
         localStorage.setItem('portfolioData', JSON.stringify(portfolioData));
         loadPortfolioItems();
-        
         showNotification('Item deleted successfully!', 'success');
+    } else {
+        showNotification('Item not found', 'error');
     }
 }
 
-// Videos Management System
+// Videos Management System - FIXED (Firebase based)
 function initVideosManagement() {
     const addVideoBtn = document.getElementById('addVideoBtn');
     const videoForm = document.getElementById('videoItemForm');
@@ -279,6 +324,11 @@ async function loadVideosList() {
         
         const videosList = document.getElementById('videosList');
         
+        if (!videosList) {
+            console.error('Videos list element not found');
+            return;
+        }
+        
         if (!doc.exists) {
             videosList.innerHTML = '<tr><td colspan="6" class="text-center">No videos found. Add your first video!</td></tr>';
             return;
@@ -299,8 +349,8 @@ async function loadVideosList() {
                          class="admin-thumbnail" 
                          onerror="this.src='https://picsum.photos/100/100?random=1'">
                 </td>
-                <td>${reel.title}</td>
-                <td><span class="category-badge">${reel.category}</span></td>
+                <td>${reel.title || 'Untitled'}</td>
+                <td><span class="category-badge">${reel.category || 'Uncategorized'}</span></td>
                 <td>${reel.duration || 'N/A'}</td>
                 <td>${reel.platform || 'instagram'}</td>
                 <td>
@@ -318,8 +368,9 @@ async function loadVideosList() {
         console.error('Error loading videos:', error);
         const videosList = document.getElementById('videosList');
         if (videosList) {
-            videosList.innerHTML = '<tr><td colspan="6" class="text-center error">Error loading videos</td></tr>';
+            videosList.innerHTML = '<tr><td colspan="6" class="text-center error">Error loading videos. Check console.</td></tr>';
         }
+        showNotification('Error loading videos. Check Firebase permissions.', 'error');
     }
 }
 
@@ -333,14 +384,20 @@ async function saveVideoItem() {
     const duration = document.getElementById('videoDuration').value;
     const platform = document.getElementById('videoPlatform').value;
     
+    // Validation
+    if (!title || !url || !thumbnail || !category) {
+        showNotification('Please fill all required fields', 'error');
+        return;
+    }
+    
     const newReel = {
-        title,
-        description,
-        url,
-        thumbnail,
-        category,
-        duration,
-        platform
+        title: title.trim(),
+        description: (description || '').trim(),
+        url: url.trim(),
+        thumbnail: thumbnail.trim(),
+        category: category.trim(),
+        duration: (duration || '').trim(),
+        platform: (platform || 'instagram').trim()
     };
     
     try {
@@ -356,7 +413,12 @@ async function saveVideoItem() {
         
         if (editIndex !== '') {
             // Edit existing reel
-            reels[editIndex] = newReel;
+            const index = parseInt(editIndex);
+            if (index >= 0 && index < reels.length) {
+                reels[index] = newReel;
+            } else {
+                throw new Error('Invalid video index');
+            }
         } else {
             // Add new reel
             reels.push(newReel);
@@ -374,7 +436,7 @@ async function saveVideoItem() {
         
     } catch (error) {
         console.error('Error saving video:', error);
-        showNotification('Error saving video. Please try again.', 'error');
+        showNotification('Error saving video: ' + error.message, 'error');
     }
 }
 
@@ -389,6 +451,8 @@ async function editVideo(index) {
             
             if (reels[index]) {
                 showVideoForm(reels[index], index);
+            } else {
+                showNotification('Video not found', 'error');
             }
         }
     } catch (error) {
@@ -400,23 +464,27 @@ async function editVideo(index) {
 function showVideoForm(video = null, index = '') {
     const form = document.getElementById('videoForm');
     const formTitle = document.getElementById('videoFormTitle');
-    const formElement = document.getElementById('videoItemForm');
+    
+    if (!form) {
+        console.error('Video form not found');
+        return;
+    }
     
     if (video) {
         // Edit mode
         formTitle.textContent = 'Edit Video';
         document.getElementById('videoId').value = index;
-        document.getElementById('videoTitle').value = video.title;
+        document.getElementById('videoTitle').value = video.title || '';
         document.getElementById('videoDescription').value = video.description || '';
-        document.getElementById('videoUrl').value = video.url;
-        document.getElementById('videoThumbnail').value = video.thumbnail;
-        document.getElementById('videoCategory').value = video.category;
+        document.getElementById('videoUrl').value = video.url || '';
+        document.getElementById('videoThumbnail').value = video.thumbnail || '';
+        document.getElementById('videoCategory').value = video.category || '';
         document.getElementById('videoDuration').value = video.duration || '';
         document.getElementById('videoPlatform').value = video.platform || 'instagram';
     } else {
         // Add mode
         formTitle.textContent = 'Add Video/Reel';
-        formElement.reset();
+        document.getElementById('videoItemForm').reset();
         document.getElementById('videoId').value = '';
     }
     
@@ -425,7 +493,10 @@ function showVideoForm(video = null, index = '') {
 }
 
 function hideVideoForm() {
-    document.getElementById('videoForm').style.display = 'none';
+    const form = document.getElementById('videoForm');
+    if (form) {
+        form.style.display = 'none';
+    }
 }
 
 async function deleteVideo(index) {
@@ -443,28 +514,39 @@ async function deleteVideo(index) {
             let reels = reelsData.reels || [];
             
             // Remove the reel at specified index
-            reels.splice(index, 1);
-            
-            // Save back to Firebase
-            await docRef.set({
-                reels: reels,
-                lastUpdated: new Date().toISOString()
-            }, { merge: true });
-            
-            showNotification('Video deleted successfully!', 'success');
-            loadVideosList();
+            if (index >= 0 && index < reels.length) {
+                reels.splice(index, 1);
+                
+                // Save back to Firebase
+                await docRef.set({
+                    reels: reels,
+                    lastUpdated: new Date().toISOString()
+                }, { merge: true });
+                
+                showNotification('Video deleted successfully!', 'success');
+                loadVideosList();
+            } else {
+                showNotification('Video not found', 'error');
+            }
+        } else {
+            showNotification('No videos data found', 'error');
         }
         
     } catch (error) {
         console.error('Error deleting video:', error);
-        showNotification('Error deleting video. Please try again.', 'error');
+        showNotification('Error deleting video: ' + error.message, 'error');
     }
 }
 
-// Image Upload Functions
+// Image Upload Functions - FIXED
 function initModals() {
     const modal = document.getElementById('imageUploadModal');
     const closeBtn = document.querySelector('.modal .close');
+    
+    if (!modal) {
+        console.error('Image upload modal not found');
+        return;
+    }
     
     if (closeBtn) {
         closeBtn.addEventListener('click', function() {
@@ -521,14 +603,16 @@ function handleImageSelect(e) {
         // Show preview
         const reader = new FileReader();
         reader.onload = function(e) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
+            if (preview) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            }
             if (placeholder) placeholder.style.display = 'none';
         };
         reader.readAsDataURL(file);
         
         // Enable upload button
-        uploadBtn.disabled = false;
+        if (uploadBtn) uploadBtn.disabled = false;
     } else {
         resetImageUpload();
     }
@@ -541,7 +625,7 @@ async function uploadToImgBB() {
     const progressFill = document.querySelector('.progress-fill');
     const progressText = document.querySelector('.progress-text');
     
-    if (!fileInput.files[0]) {
+    if (!fileInput || !fileInput.files[0]) {
         showNotification('Please select an image first', 'error');
         return;
     }
@@ -550,10 +634,10 @@ async function uploadToImgBB() {
     
     try {
         // Show progress
-        uploadBtn.disabled = true;
-        progress.style.display = 'block';
-        progressFill.style.width = '30%';
-        progressText.textContent = 'Uploading to ImgBB...';
+        if (uploadBtn) uploadBtn.disabled = true;
+        if (progress) progress.style.display = 'block';
+        if (progressFill) progressFill.style.width = '30%';
+        if (progressText) progressText.textContent = 'Uploading to ImgBB...';
         
         // Create form data
         const formData = new FormData();
@@ -565,22 +649,27 @@ async function uploadToImgBB() {
             body: formData
         });
         
-        progressFill.style.width = '70%';
-        progressText.textContent = 'Processing image...';
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        if (progressFill) progressFill.style.width = '70%';
+        if (progressText) progressText.textContent = 'Processing image...';
         
         const result = await response.json();
         
         if (result.success) {
-            progressFill.style.width = '100%';
-            progressText.textContent = 'Upload successful!';
+            if (progressFill) progressFill.style.width = '100%';
+            if (progressText) progressText.textContent = 'Upload successful!';
             
             // Get the image URL
-            const imageUrl = result.data.url;
-            const thumbUrl = result.data.thumb.url; // Thumbnail URL
             const displayUrl = result.data.display_url;
             
             // Set the image URL in the form
-            document.getElementById('itemImage').value = displayUrl;
+            const itemImageInput = document.getElementById('itemImage');
+            if (itemImageInput) {
+                itemImageInput.value = displayUrl;
+            }
             
             // Show success message
             setTimeout(() => {
@@ -607,25 +696,33 @@ function resetImageUpload() {
     const placeholder = document.querySelector('.preview-placeholder');
     const progress = document.querySelector('.upload-progress');
     
-    fileInput.value = '';
-    uploadBtn.disabled = true;
-    preview.src = '';
-    preview.style.display = 'none';
+    if (fileInput) fileInput.value = '';
+    if (uploadBtn) uploadBtn.disabled = true;
+    if (preview) {
+        preview.src = '';
+        preview.style.display = 'none';
+    }
     if (placeholder) placeholder.style.display = 'flex';
-    progress.style.display = 'none';
+    if (progress) progress.style.display = 'none';
 }
 
 function closeImageUploadModal() {
-    document.getElementById('imageUploadModal').style.display = 'none';
+    const modal = document.getElementById('imageUploadModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
     resetImageUpload();
 }
 
 function openImageUpload() {
-    document.getElementById('imageUploadModal').style.display = 'block';
-    resetImageUpload();
+    const modal = document.getElementById('imageUploadModal');
+    if (modal) {
+        modal.style.display = 'block';
+        resetImageUpload();
+    }
 }
 
-// Notification system
+// Notification system - FIXED
 function showNotification(message, type = 'info') {
     // Remove existing notification
     const existingNotification = document.querySelector('.admin-notification');
@@ -638,9 +735,7 @@ function showNotification(message, type = 'info') {
     notification.innerHTML = `
         <div class="notification-content">
             <span>${message}</span>
-            <button class="notification-close" onclick="this.parentElement.parentElement.remove()">
-                &times;
-            </button>
+            <button class="notification-close">&times;</button>
         </div>
     `;
     
@@ -688,6 +783,14 @@ function showNotification(message, type = 'info') {
     
     document.body.appendChild(notification);
     
+    // Close button event
+    const closeBtn = notification.querySelector('.notification-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+            notification.remove();
+        });
+    }
+    
     // Auto remove after 5 seconds
     setTimeout(() => {
         if (notification.parentElement) {
@@ -695,3 +798,13 @@ function showNotification(message, type = 'info') {
         }
     }, 5000);
 }
+
+// Make functions globally available
+window.openImageUpload = openImageUpload;
+window.closeImageUploadModal = closeImageUploadModal;
+window.hidePortfolioForm = hidePortfolioForm;
+window.hideVideoForm = hideVideoForm;
+window.editPortfolioItem = editPortfolioItem;
+window.deletePortfolioItem = deletePortfolioItem;
+window.editVideo = editVideo;
+window.deleteVideo = deleteVideo;
