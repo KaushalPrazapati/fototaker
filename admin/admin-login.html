@@ -3,17 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- Favicon -->
-    <link rel="apple-touch-icon" sizes="180x180" href="../image/favicon/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="../image/favicon/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="../image/favicon/favicon-16x16.png">
-    <link rel="manifest" href="../image/favicon/site.webmanifest">
-    <link rel="mask-icon" href="../image/favicon/safari-pinned-tab.svg" color="#5bbad5">
-    <link rel="shortcut icon" href="../image/favicon/favicon.ico">
-    <meta name="msapplication-TileColor" content="#da532c">
-    <meta name="msapplication-config" content="../image/favicon/browserconfig.xml">
-    <meta name="theme-color" content="#ffffff">
+    <link rel="icon" type="image/x-icon" href="../image/favicon/favicon.ico">
     <title>Admin Login - FotoTaker</title>
     <link rel="stylesheet" href="admin-style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -21,7 +11,6 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 </head>
 <body>
     <div class="login-container">
@@ -49,7 +38,6 @@
 
     <!-- Firebase Configuration -->
     <script>
-        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyC-25CvcxzGmFuw3wRg-T9U-eKPuckFw0c",
             authDomain: "fototaker-studio.firebaseapp.com",
@@ -60,12 +48,11 @@
             measurementId: "G-W4NT35YBQJ"
         };
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
     </script>
 
     <script src="admin-script.js"></script>
 </body>
 </html>
-
-
