@@ -34,7 +34,7 @@
         <div class="nav-container">
             <div class="nav-logo">
                 <a href="../index.html" style="text-decoration: none; display: flex; align-items: center; gap: 1rem; color: inherit;">
-                    <img src="../image/logo.png" alt="FotoTaker Logo" class="logo-img">
+                    <img src="../image/logo.png" alt="FotoTaker Logo" class="logo-img" onerror="this.src='https://picsum.photos/100/100?random=1'">
                     <h2 class="logo-text">FotoTaker</h2>
                 </a>
             </div>
@@ -70,6 +70,7 @@
                 <button class="filter-btn" data-filter="pre-wedding">Pre-Wedding</button>
                 <button class="filter-btn" data-filter="portrait">Portrait</button>
                 <button class="filter-btn" data-filter="events">Events</button>
+                <button class="filter-btn" data-filter="drone">Drone</button>
             </div>
         </div>
     </section>
@@ -83,9 +84,9 @@
             
             <!-- Load More Button -->
             <div class="load-more-container">
-                <button id="loadMoreBtn" class="btn btn-primary">
+                <button id="loadMoreBtn" class="btn btn-primary" onclick="loadMorePortfolio()">
                     <i class="fas fa-spinner fa-spin" id="loadMoreSpinner" style="display: none;"></i>
-                    Load More
+                    <span id="loadMoreText">Load More</span>
                 </button>
             </div>
         </div>
@@ -101,7 +102,7 @@
                     <a href="../index.html#booking" class="btn btn-primary btn-large">
                         <i class="fas fa-calendar-check"></i> Book Your Session
                     </a>
-                    <button onclick="openWhatsApp('Hello! I want to book a photography session')" class="btn btn-secondary btn-large">
+                    <button onclick="openWhatsApp('Hello! I saw your portfolio and want to book a photography session')" class="btn btn-secondary btn-large">
                         <i class="fab fa-whatsapp"></i> WhatsApp Now
                     </button>
                 </div>
@@ -115,7 +116,7 @@
             <div class="footer-content">
                 <div class="footer-info">
                     <div class="footer-logo">
-                        <img src="../image/logo.png" alt="FotoTaker Logo" class="logo-img">
+                        <img src="../image/logo.png" alt="FotoTaker Logo" class="logo-img" onerror="this.src='https://picsum.photos/100/100?random=1'">
                         <p>Professional Photography & Videography Services</p>
                     </div>
                     <div class="footer-links">
@@ -148,6 +149,7 @@
 
     <!-- Firebase Configuration -->
     <script>
+        // Firebase Configuration - Check if already initialized
         const firebaseConfig = {
             apiKey: "AIzaSyC-25CvcxzGmFuw3wRg-T9U-eKPuckFw0c",
             authDomain: "fototaker-studio.firebaseapp.com",
@@ -158,7 +160,10 @@
             measurementId: "G-W4NT35YBQJ"
         };
 
-        firebase.initializeApp(firebaseConfig);
+        // Initialize Firebase only once
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
     </script>
 
     <script src="portfolio.js"></script>
