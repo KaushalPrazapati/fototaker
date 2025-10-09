@@ -1,668 +1,846 @@
-// Portfolio Page JavaScript - COMPLETELY FIXED WITH PLATFORM-BASED VIDEO DISPLAY
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Portfolio page loaded');
-    
-    // Initialize all systems
-    initTheme();
-    initNavigation();
-    initPortfolioFilters();
-    initPortfolioLoading();
-    loadVideosForPortfolio(); // ✅ Videos load karo
-    
-    // Make body visible
-    document.body.classList.add('loaded');
-    
-    console.log('Portfolio page initialized');
-});
-
-// Portfolio state management
-let currentPortfolioPage = 0;
-const portfolioPerPage = 12;
-let allPortfolioItems = [];
-let filteredPortfolioItems = [];
-let currentFilter = 'all';
-
-// Initialize portfolio filters
-function initPortfolioFilters() {
-    const filterBtns = document.querySelectorAll('.filter-btn');
-    
-    filterBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            // Remove active class from all buttons
-            filterBtns.forEach(b => b.classList.remove('active'));
-            // Add active class to clicked button
-            this.classList.add('active');
-            
-            const filter = this.getAttribute('data-filter');
-            currentFilter = filter;
-            filterPortfolioItems(filter);
-        });
-    });
+/* Portfolio Page Specific Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-// Filter portfolio items
-function filterPortfolioItems(filter) {
-    if (filter === 'all') {
-        filteredPortfolioItems = [...allPortfolioItems];
-    } else {
-        filteredPortfolioItems = allPortfolioItems.filter(item => 
-            item.category === filter
-        );
+:root {
+    /* Dark Theme Colors */
+    --primary-color: #818cf8;
+    --secondary-color: #a78bfa;
+    --accent-color: #fbbf24;
+    --text-dark: #f3f4f6;
+    --text-light: #d1d5db;
+    --bg-light: #111827;
+    --bg-secondary: #1f2937;
+    --bg-primary: #111827; /* ADDED MISSING VARIABLE */
+    --card-bg: #374151;
+    --border-color: #4b5563;
+    --shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    --gradient: linear-gradient(135deg, #818cf8 0%, #764ba2 100%);
+}
+
+.light-theme {
+    /* Light Theme Colors */
+    --primary-color: #6366f1;
+    --secondary-color: #8b5cf6;
+    --accent-color: #f59e0b;
+    --text-dark: #1f2937;
+    --text-light: #6b7280;
+    --bg-light: #ffffff;
+    --bg-secondary: #faf8fc;
+    --bg-primary: #ffffff; /* ADDED MISSING VARIABLE */
+    --card-bg: #ffffff;
+    --border-color: #b2bce7;
+    --shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+    --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Font Families */
+:root {
+    --font-heading: 'Playfair Display', serif;
+    --font-body: 'Inter', sans-serif;
+    --font-special: 'Poiret One', cursive;
+}
+
+body {
+    font-family: var(--font-body);
+    line-height: 1.7;
+    color: var(--text-dark);
+    background: var(--bg-light);
+    transition: all 0.3s ease;
+    visibility: hidden; /* Prevent FOUC */
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Navigation */
+.navbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    z-index: 1000;
+    padding: 0.8rem 0;
+    transition: all 0.3s ease;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.dark-theme .navbar {
+    background: rgba(17, 24, 39, 0.95);
+    border-bottom-color: var(--border-color);
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Logo Styling */
+.nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.logo-img {
+    height: 40px;
+    width: auto;
+    transition: transform 0.3s ease;
+}
+
+.logo-img:hover {
+    transform: scale(1.05);
+}
+
+.logo-text {
+    font-family: var(--font-special);
+    font-size: 1.8rem;
+    font-weight: 700;
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* SMALL Box Style Navigation Links */
+.box-link {
+    background: var(--card-bg);
+    padding: 8px 16px !important;
+    border-radius: 25px;
+    border: 2px solid var(--border-color);
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    box-shadow: var(--shadow);
+    margin: 0 3px;
+    color: var(--text-dark);
+}
+
+.box-link:hover {
+    background: var(--primary-color);
+    color: white !important;
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+}
+
+.box-link::after {
+    display: none !important;
+}
+
+/* Active Nav Link */
+.nav-link.active {
+    background: var(--primary-color) !important;
+    color: white !important;
+    border-color: var(--primary-color) !important;
+}
+
+/* SMALL Box Style Theme Toggle */
+.box-theme {
+    background: var(--card-bg) !important;
+    border: 2px solid var(--border-color) !important;
+    padding: 8px !important;
+    border-radius: 25px !important;
+    width: 40px !important;
+    height: 40px !important;
+    box-shadow: var(--shadow) !important;
+    margin-left: 0.5rem !important;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+}
+
+.box-theme:hover {
+    background: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    transform: translateY(-2px) rotate(30deg) !important;
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3) !important;
+}
+
+.box-theme:hover i {
+    color: white !important;
+}
+
+.box-theme i {
+    color: var(--text-dark);
+    transition: color 0.3s ease;
+}
+
+/* Navigation Menu with SMALL Box Buttons */
+.nav-menu {
+    display: flex;
+    gap: 0.3rem;
+    align-items: center;
+}
+
+.nav-toggle {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 5px;
+}
+
+.bar {
+    width: 22px;
+    height: 2px;
+    background: var(--text-dark);
+    margin: 3px 0;
+    transition: 0.3s;
+    border-radius: 2px;
+}
+
+/* Mobile Responsive for SMALL Box Links */
+@media (max-width: 768px) {
+    .nav-menu {
+        position: fixed;
+        left: -100%;
+        top: 70px;
+        flex-direction: column;
+        background: var(--card-bg);
+        width: 100%;
+        text-align: center;
+        transition: 0.3s;
+        box-shadow: var(--shadow);
+        padding: 1.5rem 0;
+        gap: 0.8rem;
+        z-index: 999;
     }
-    
-    // Reset pagination
-    currentPortfolioPage = 0;
-    
-    // Display filtered items
-    displayPortfolioPage();
-}
 
-// Initialize portfolio loading
-async function initPortfolioLoading() {
-    try {
-        await loadAllPortfolioItems();
-        initPortfolioAnimations();
-        setupLoadMore();
-    } catch (error) {
-        console.error('Error loading portfolio:', error);
-        showDefaultPortfolio();
+    .nav-menu.active {
+        left: 0;
     }
-}
 
-// Load all portfolio items from Firebase
-async function loadAllPortfolioItems() {
-    const portfolioGrid = document.getElementById('portfolioGridFull');
-    
-    if (!portfolioGrid) return;
-    
-    try {
-        console.log('Loading portfolio from Firebase...');
-        
-        // First try Firebase
-        const db = firebase.firestore();
-        const querySnapshot = await db.collection('portfolio')
-            .orderBy('createdAt', 'desc')
-            .get();
-        
-        const portfolioData = [];
-        querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            portfolioData.push({
-                id: doc.id,
-                ...data
-            });
-        });
-        
-        console.log('Portfolio data loaded:', portfolioData.length, 'items');
-        
-        if (portfolioData.length > 0) {
-            allPortfolioItems = portfolioData;
-            filteredPortfolioItems = [...portfolioData];
-            displayPortfolioPage();
-        } else {
-            // Fallback to localStorage (admin panel data)
-            loadPortfolioFromLocalStorage();
-        }
-    } catch (error) {
-        console.error('Error loading portfolio from Firebase:', error);
-        // Fallback to localStorage
-        loadPortfolioFromLocalStorage();
+    .box-link {
+        padding: 10px 20px !important;
+        margin: 3px 15px;
+        width: 80%;
+        text-align: center;
+        font-size: 0.9rem;
     }
-}
 
-// Load portfolio from localStorage (admin panel data)
-function loadPortfolioFromLocalStorage() {
-    const portfolioData = JSON.parse(localStorage.getItem('portfolioData')) || [];
-    
-    if (portfolioData.length > 0) {
-        allPortfolioItems = portfolioData;
-        filteredPortfolioItems = [...portfolioData];
-        displayPortfolioPage();
-    } else {
-        // Final fallback - default portfolio
-        showDefaultPortfolio();
+    .box-theme {
+        margin: 0.8rem auto !important;
+        width: 45px !important;
+        height: 45px !important;
     }
-}
 
-// Display current page of portfolio items
-function displayPortfolioPage() {
-    const portfolioGrid = document.getElementById('portfolioGridFull');
-    const loadMoreBtn = document.getElementById('loadMoreBtn');
-    
-    if (!portfolioGrid) return;
-    
-    const startIndex = currentPortfolioPage * portfolioPerPage;
-    const endIndex = startIndex + portfolioPerPage;
-    const itemsToShow = filteredPortfolioItems.slice(0, endIndex);
-    
-    if (itemsToShow.length === 0) {
-        portfolioGrid.innerHTML = `
-            <div class="loading" style="grid-column: 1 / -1;">
-                <p>No portfolio items found for this filter.</p>
-                <p>Try selecting a different category or check back later.</p>
-            </div>
-        `;
-        if (loadMoreBtn) loadMoreBtn.style.display = 'none';
-        return;
+    .logo-img {
+        height: 35px;
     }
-    
-    portfolioGrid.innerHTML = itemsToShow.map(item => `
-        <div class="portfolio-item-full" data-categories="${item.category || 'all'}">
-            <img src="${item.image || 'https://picsum.photos/400/600?random=' + Math.floor(Math.random() * 100)}" 
-                 alt="${item.title || 'Portfolio Image'}" 
-                 onerror="handleImageError(this)">
-            <div class="portfolio-overlay-full">
-                <h3>${item.title || 'Portfolio Item'}</h3>
-                ${item.description ? `<p>${item.description}</p>` : ''}
-                <small>${getCategoryDisplayName(item.category)}</small>
-            </div>
-            <div class="category-badge">${getCategoryDisplayName(item.category)}</div>
-        </div>
-    `).join('');
-    
-    // Update load more button
-    if (loadMoreBtn) {
-        if (endIndex >= filteredPortfolioItems.length) {
-            loadMoreBtn.style.display = 'none';
-        } else {
-            loadMoreBtn.style.display = 'inline-flex';
-            loadMoreBtn.disabled = false;
-            const loadMoreSpinner = document.getElementById('loadMoreSpinner');
-            const loadMoreText = document.getElementById('loadMoreText');
-            if (loadMoreSpinner) loadMoreSpinner.style.display = 'none';
-            if (loadMoreText) loadMoreText.textContent = 'Load More';
-        }
+
+    .logo-text {
+        font-size: 1.5rem;
     }
-    
-    // Re-initialize animations after loading content
-    initPortfolioAnimations();
-}
 
-// Load more portfolio items
-async function loadMorePortfolio() {
-    const loadMoreBtn = document.getElementById('loadMoreBtn');
-    const loadMoreSpinner = document.getElementById('loadMoreSpinner');
-    const loadMoreText = document.getElementById('loadMoreText');
-    
-    if (!loadMoreBtn) return;
-    
-    try {
-        loadMoreBtn.disabled = true;
-        if (loadMoreSpinner) loadMoreSpinner.style.display = 'inline-block';
-        if (loadMoreText) loadMoreText.textContent = 'Loading...';
-        
-        // Simulate loading delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        currentPortfolioPage++;
-        displayPortfolioPage();
-        
-    } catch (error) {
-        console.error('Error loading more portfolio items:', error);
-        showNotification('Error loading more items', 'error');
-        loadMoreBtn.disabled = false;
-        if (loadMoreSpinner) loadMoreSpinner.style.display = 'none';
-        if (loadMoreText) loadMoreText.textContent = 'Load More';
+    .nav-toggle {
+        display: flex;
     }
-}
 
-// Setup load more functionality
-function setupLoadMore() {
-    const loadMoreBtn = document.getElementById('loadMoreBtn');
-    if (loadMoreBtn) {
-        loadMoreBtn.addEventListener('click', loadMorePortfolio);
+    .nav-toggle.active .bar:nth-child(1) {
+        transform: rotate(-45deg) translate(-5px, 6px);
     }
-}
 
-// Initialize portfolio animations
-function initPortfolioAnimations() {
-    const portfolioItems = document.querySelectorAll('.portfolio-item-full');
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry, index) => {
-            if (entry.isIntersecting) {
-                setTimeout(() => {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'scale(1)';
-                }, index * 100);
-            }
-        });
-    }, {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    });
+    .nav-toggle.active .bar:nth-child(2) {
+        opacity: 0;
+    }
 
-    portfolioItems.forEach(item => {
-        item.style.opacity = '0';
-        item.style.transform = 'scale(0.8)';
-        item.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
-        observer.observe(item);
-    });
-}
-
-// Show default portfolio (fallback)
-function showDefaultPortfolio() {
-    const defaultItems = [
-        { category: 'wedding', title: 'Beautiful Wedding Ceremony', description: 'Traditional wedding moments', image: 'https://picsum.photos/400/600?random=1' },
-        { category: 'pre-wedding', title: 'Romantic Pre-Wedding', description: 'Couple photoshoot in nature', image: 'https://picsum.photos/400/600?random=2' },
-        { category: 'portrait', title: 'Professional Portrait', description: 'Studio portrait session', image: 'https://picsum.photos/400/600?random=3' },
-        { category: 'events', title: 'Corporate Event', description: 'Business conference coverage', image: 'https://picsum.photos/400/600?random=4' },
-        { category: 'wedding', title: 'Candid Wedding Moments', description: 'Natural and emotional shots', image: 'https://picsum.photos/400/600?random=5' },
-        { category: 'pre-wedding', title: 'Urban Couple Shoot', description: 'Cityscape photography', image: 'https://picsum.photos/400/600?random=6' },
-        { category: 'portrait', title: 'Family Portrait', description: 'Multi-generational family photos', image: 'https://picsum.photos/400/600?random=7' },
-        { category: 'events', title: 'Birthday Celebration', description: 'Special birthday event', image: 'https://picsum.photos/400/600?random=8' },
-        { category: 'wedding', title: 'Traditional Ceremony', description: 'Cultural wedding traditions', image: 'https://picsum.photos/400/600?random=9' },
-        { category: 'pre-wedding', title: 'Beach Shoot', description: 'Sunset couple photos', image: 'https://picsum.photos/400/600?random=10' },
-        { category: 'portrait', title: 'Maternity Shoot', description: 'Pregnancy photography', image: 'https://picsum.photos/400/600?random=11' },
-        { category: 'events', title: 'Anniversary Party', description: '25 years celebration', image: 'https://picsum.photos/400/600?random=12' }
-    ];
-    
-    allPortfolioItems = defaultItems;
-    filteredPortfolioItems = [...defaultItems];
-    displayPortfolioPage();
-}
-
-// ==================== VIDEOS SECTION - PLATFORM BASED DISPLAY ====================
-
-// Videos Loading for Portfolio Page
-async function loadVideosForPortfolio() {
-    try {
-        const db = firebase.firestore();
-        const querySnapshot = await db.collection('videos')
-            .orderBy('createdAt', 'desc')
-            .limit(6)
-            .get();
-        
-        const videosGrid = document.getElementById('videosGrid');
-        
-        if (!videosGrid) {
-            console.log('Videos grid not found on this page');
-            return;
-        }
-        
-        if (querySnapshot.empty) {
-            videosGrid.innerHTML = '<p class="text-center">No videos available yet. Check back later!</p>';
-            return;
-        }
-        
-        const videosData = [];
-        querySnapshot.forEach((doc) => {
-            videosData.push({
-                id: doc.id,
-                ...doc.data()
-            });
-        });
-        
-        videosGrid.innerHTML = videosData.map(video => {
-            // Platform-based styling
-            const isReel = video.platform === 'instagram' || video.platform === 'reels';
-            const videoClass = isReel ? 'video-card reel-video' : 'video-card youtube-video';
-            const aspectRatio = isReel ? 'aspect-ratio-9-16' : 'aspect-ratio-16-9';
-            
-            return `
-                <div class="${videoClass}">
-                    <div class="video-thumbnail ${aspectRatio}">
-                        <img src="${video.thumbnail}" alt="${video.title}" 
-                             onerror="this.src='https://picsum.photos/${isReel ? '300/500' : '400/300'}?random=1'">
-                        <button class="video-play-btn" onclick="playVideo('${video.url}', '${video.platform}')">
-                            <i class="fas fa-play"></i>
-                        </button>
-                        <div class="video-platform-badge ${video.platform}">
-                            <i class="fab fa-${video.platform === 'youtube' ? 'youtube' : 'instagram'}"></i>
-                            ${video.platform === 'youtube' ? 'YouTube' : 'Reel'}
-                        </div>
-                    </div>
-                    <div class="video-info">
-                        <h3>${video.title || 'Video'}</h3>
-                        <p>${video.description || ''}</p>
-                        <small>${getCategoryDisplayName(video.category)}</small>
-                    </div>
-                </div>
-            `;
-        }).join('');
-        
-        // Initialize video animations
-        initVideoAnimations();
-        
-    } catch (error) {
-        console.error('Error loading videos:', error);
-        const videosGrid = document.getElementById('videosGrid');
-        if (videosGrid) {
-            videosGrid.innerHTML = '<p class="text-center">Error loading videos. Please try again later.</p>';
-        }
+    .nav-toggle.active .bar:nth-child(3) {
+        transform: rotate(45deg) translate(-5px, -6px);
     }
 }
 
-// Video Play Function - Platform based modal
-function playVideo(videoUrl, platform) {
-    // Create modal
-    const modal = document.createElement('div');
-    modal.className = 'video-modal';
-    modal.style.display = 'flex';
-    
-    const isReel = platform === 'instagram' || platform === 'reels';
-    
-    // Convert URLs to embed format
-    let embedUrl = videoUrl;
-    let modalClass = isReel ? 'reel-modal' : 'youtube-modal';
-    
-    // YouTube URL conversion
-    if (videoUrl.includes('youtube.com/watch?v=')) {
-        const videoId = videoUrl.split('v=')[1]?.split('&')[0];
-        embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
-    } else if (videoUrl.includes('youtu.be/')) {
-        const videoId = videoUrl.split('youtu.be/')[1];
-        embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
-    }
-    // Instagram Reel URL
-    else if (videoUrl.includes('instagram.com/p/') || videoUrl.includes('instagram.com/reel/')) {
-        embedUrl = videoUrl;
-        modalClass = 'reel-modal';
-    }
-    
-    modal.innerHTML = `
-        <div class="video-modal-content ${modalClass}">
-            <button class="close-modal" onclick="this.parentElement.parentElement.remove()">
-                <i class="fas fa-times"></i>
-            </button>
-            <div class="modal-header">
-                <h3>${isReel ? 'Instagram Reel' : 'YouTube Video'}</h3>
-            </div>
-            <div class="modal-video-container">
-                ${
-                    embedUrl.includes('youtube.com/embed') 
-                    ? `<iframe src="${embedUrl}" 
-                              frameborder="0" 
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                              allowfullscreen>
-                       </iframe>`
-                    : `<div class="external-video-link">
-                          <div class="video-placeholder">
-                              <i class="fab fa-${isReel ? 'instagram' : 'video'}"></i>
-                              <p>This ${isReel ? 'Instagram Reel' : 'video'} cannot be embedded here.</p>
-                              <a href="${videoUrl}" target="_blank" class="btn btn-primary">
-                                  <i class="fas fa-external-link-alt"></i> Watch on ${isReel ? 'Instagram' : 'Original Platform'}
-                              </a>
-                          </div>
-                       </div>`
-                }
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    // Close modal when clicking outside
-    modal.addEventListener('click', function(e) {
-        if (e.target === modal) {
-            modal.remove();
-        }
-    });
-    
-    // Close with Escape key
-    const closeWithEscape = function(e) {
-        if (e.key === 'Escape') {
-            modal.remove();
-            document.removeEventListener('keydown', closeWithEscape);
-        }
-    };
-    document.addEventListener('keydown', closeWithEscape);
+/* Buttons */
+.btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 50px;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-body);
 }
 
-// Initialize video animations
-function initVideoAnimations() {
-    const videoCards = document.querySelectorAll('.video-card');
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry, index) => {
-            if (entry.isIntersecting) {
-                setTimeout(() => {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }, index * 150);
-            }
-        });
-    }, {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    });
-
-    videoCards.forEach(card => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(30px)';
-        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-        observer.observe(card);
-    });
+.btn-primary {
+    background: var(--gradient);
+    color: white;
+    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
 }
 
-// ==================== HELPER FUNCTIONS ====================
-
-// Helper function to get category display name
-function getCategoryDisplayName(category) {
-    const categoryMap = {
-        'wedding': 'Wedding',
-        'pre-wedding': 'Pre-Wedding',
-        'portrait': 'Portrait',
-        'events': 'Events',
-        'drone': 'Drone'
-    };
-    return categoryMap[category] || 'Photography';
+.btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(99, 102, 241, 0.4);
 }
 
-// Image error handler
-function handleImageError(img) {
-    console.log('Image failed to load:', img.src);
-    if (!img.src.includes('picsum.photos')) {
-        img.src = 'https://picsum.photos/400/600?random=' + Math.floor(Math.random() * 100);
+.btn-secondary {
+    background: transparent;
+    color: var(--text-dark);
+    border: 2px solid var(--primary-color);
+}
+
+.btn-secondary:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-3px);
+}
+
+.btn-large {
+    padding: 15px 40px;
+    font-size: 1.1rem;
+}
+
+.btn-block {
+    width: 100%;
+    justify-content: center;
+}
+
+/* Sections Common */
+.section-title {
+    text-align: center;
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-dark);
+    font-weight: 700;
+}
+
+.section-subtitle {
+    text-align: center;
+    font-size: 1.1rem;
+    color: var(--text-light);
+    margin-bottom: 3rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    font-family: var(--font-body);
+    font-weight: 300;
+}
+
+/* Portfolio Header */
+.portfolio-header {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.6)), 
+                url('https://images.unsplash.com/photo-1511285560929-80b456fea0bc?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80') center/cover;
+    color: white;
+    text-align: center;
+    padding: 120px 0 60px;
+    margin-top: 70px;
+}
+
+.portfolio-header h1 {
+    font-family: var(--font-heading);
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+    font-weight: 900;
+}
+
+.portfolio-header p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    margin-bottom: 2rem;
+}
+
+/* Portfolio Filters */
+.portfolio-filters {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.filter-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    padding: 10px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    font-weight: 600;
+    font-family: var(--font-body);
+}
+
+.filter-btn:hover,
+.filter-btn.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+/* Portfolio Main Section */
+.portfolio-main {
+    padding: 80px 0;
+    background: var(--bg-secondary);
+}
+
+.portfolio-grid-full {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.portfolio-item-full {
+    position: relative;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: all 0.4s ease;
+    aspect-ratio: 3/4;
+    opacity: 0;
+    transform: scale(0.8);
+    background: var(--card-bg);
+}
+
+.portfolio-item-full img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.portfolio-overlay-full {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+    color: white;
+    padding: 1.5rem;
+    transform: translateY(100%);
+    transition: transform 0.4s ease;
+}
+
+.portfolio-item-full:hover .portfolio-overlay-full {
+    transform: translateY(0);
+}
+
+.portfolio-item-full:hover {
+    transform: translateY(-8px) scale(1.02);
+}
+
+.portfolio-item-full:hover img {
+    transform: scale(1.1);
+}
+
+/* Load More Button */
+.load-more-container {
+    text-align: center;
+    margin-top: 3rem;
+}
+
+#loadMoreBtn {
+    padding: 12px 40px;
+    font-size: 1.1rem;
+}
+
+#loadMoreBtn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Portfolio CTA */
+.portfolio-cta {
+    background: var(--gradient);
+    color: white;
+    padding: 80px 0;
+    text-align: center;
+}
+
+.portfolio-cta h2 {
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.portfolio-cta p {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Category Badge */
+.category-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: var(--primary-color);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    z-index: 2;
+}
+
+/* Loading State */
+.loading {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-light);
+    font-size: 1.1rem;
+    grid-column: 1 / -1;
+}
+
+/* Footer */
+.footer {
+    background: var(--bg-primary);
+    color: var(--text-dark);
+    padding: 3rem 0 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.footer-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.footer-logo p {
+    color: var(--text-light);
+}
+
+.footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.footer-links a {
+    color: var(--text-dark);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+    color: var(--primary-color);
+}
+
+.social-links {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.social-link {
+    color: var(--text-dark);
+    font-size: 1.3rem;
+    transition: all 0.3s ease;
+    background: var(--card-bg);
+    padding: 12px;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow);
+    text-decoration: none;
+}
+
+.social-link:hover {
+    color: var(--primary-color);
+    transform: translateY(-3px) scale(1.1);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Specific social media colors */
+.social-link:nth-child(1):hover {
+    color: #E4405F;
+    background: linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D);
+    color: white !important;
+}
+
+.social-link:nth-child(2):hover {
+    color: #1877F2;
+    background: #1877F2;
+    color: white !important;
+}
+
+.social-link:nth-child(3):hover {
+    color: #25D366;
+    background: #25D366;
+    color: white !important;
+}
+
+.social-link:nth-child(4):hover {
+    color: #FF0000;
+    background: #FF0000;
+    color: white !important;
+}
+
+.copyright {
+    text-align: center;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color);
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+/* Animation Classes */
+.portfolio-item-full {
+    transition: opacity 0.6s ease, transform 0.6s ease, box-shadow 0.3s ease;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-color);
+}
+
+/* Selection Color */
+::selection {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Focus outlines for accessibility */
+button:focus,
+a:focus,
+input:focus,
+textarea:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* Smooth scrolling for the whole page */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Notification Styles */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #27ae60;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    z-index: 10000;
+    max-width: 400px;
+    animation: slideInRight 0.3s ease;
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
     }
 }
 
-// Notification system
-function showNotification(message, type = 'info') {
-    // Remove existing notification
-    const existingNotification = document.querySelector('.notification');
-    if (existingNotification) {
-        existingNotification.remove();
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
     }
-    
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.innerHTML = `
-        <div class="notification-content">
-            <span class="notification-message">${message}</span>
-            <button class="notification-close">&times;</button>
-        </div>
-    `;
-    
-    // Add styles if not exists
-    if (!document.querySelector('#notification-styles')) {
-        const styles = document.createElement('style');
-        styles.id = 'notification-styles';
-        styles.textContent = `
-            .notification {
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: #27ae60;
-                color: white;
-                padding: 15px 20px;
-                border-radius: 8px;
-                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-                z-index: 10000;
-                max-width: 400px;
-                animation: slideInRight 0.3s ease;
-            }
-            .notification-error { background: #e74c3c; }
-            .notification-warning { background: #f39c12; }
-            .notification-info { background: #3498db; }
-            .notification-content {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-            }
-            .notification-close {
-                background: none;
-                border: none;
-                color: white;
-                font-size: 18px;
-                cursor: pointer;
-                margin-left: 10px;
-            }
-            @keyframes slideInRight {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-            @keyframes slideOutRight {
-                from { transform: translateX(0); opacity: 1; }
-                to { transform: translateX(100%); opacity: 0; }
-            }
-        `;
-        document.head.appendChild(styles);
+    to {
+        transform: translateX(100%);
+        opacity: 0;
     }
-    
-    document.body.appendChild(notification);
-    
-    // Close button event
-    const closeBtn = notification.querySelector('.notification-close');
-    if (closeBtn) {
-        closeBtn.addEventListener('click', function() {
-            notification.style.animation = 'slideOutRight 0.3s ease';
-            setTimeout(() => notification.remove(), 300);
-        });
-    }
-    
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-        if (notification.parentElement) {
-            notification.style.animation = 'slideOutRight 0.3s ease';
-            setTimeout(() => notification.remove(), 300);
-        }
-    }, 5000);
 }
 
-// Theme Management
-function initTheme() {
-    const themeToggle = document.getElementById('themeToggle');
-    const body = document.body;
-    
-    if (!themeToggle) return;
-    
-    const themeIcon = themeToggle.querySelector('i');
-    
-    // Check saved theme or system preference
-    const getSavedTheme = () => {
-        const saved = localStorage.getItem('theme');
-        if (saved) return saved;
-        
-        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            return 'dark';
-        }
-        return 'light';
-    };
-    
-    // Apply theme function
-    const applyTheme = (theme) => {
-        if (theme === 'dark') {
-            body.classList.add('dark-theme');
-            body.classList.remove('light-theme');
-            themeIcon.classList.remove('fa-moon');
-            themeIcon.classList.add('fa-sun');
-        } else {
-            body.classList.remove('dark-theme');
-            body.classList.add('light-theme');
-            themeIcon.classList.remove('fa-sun');
-            themeIcon.classList.add('fa-moon');
-        }
-    };
-    
-    // Initialize theme
-    const savedTheme = getSavedTheme();
-    applyTheme(savedTheme);
-    
-    // Theme toggle click event
-    themeToggle.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        const isDark = body.classList.contains('dark-theme');
-        const newTheme = isDark ? 'light' : 'dark';
-        
-        applyTheme(newTheme);
-        localStorage.setItem('theme', newTheme);
-    });
+/* Image fallback styling */
+img {
+    transition: opacity 0.3s ease;
 }
 
-// Navigation Management
-function initNavigation() {
-    const navToggle = document.getElementById('navToggle');
-    const navMenu = document.getElementById('navMenu');
-    
-    // Mobile navigation toggle
-    if (navToggle && navMenu) {
-        navToggle.addEventListener('click', function() {
-            navMenu.classList.toggle('active');
-            this.classList.toggle('active');
-        });
+img[src=""], 
+img:not([src]) {
+    opacity: 0;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .portfolio-header h1 {
+        font-size: 2.5rem;
     }
     
-    // Close mobile menu function
-    function closeMobileMenu() {
-        if (navMenu) navMenu.classList.remove('active');
-        if (navToggle) navToggle.classList.remove('active');
+    .portfolio-filters {
+        gap: 0.5rem;
     }
     
-    // Close mobile menu when clicking outside
-    document.addEventListener('click', function(e) {
-        if (navMenu && navToggle && 
-            !navMenu.contains(e.target) && 
-            !navToggle.contains(e.target) &&
-            navMenu.classList.contains('active')) {
-            closeMobileMenu();
-        }
-    });
+    .filter-btn {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
     
-    // Close mobile menu when clicking on nav links
-    document.querySelectorAll('.nav-link').forEach(link => {
-        link.addEventListener('click', function() {
-            closeMobileMenu();
-        });
-    });
+    .portfolio-grid-full {
+        grid-template-columns: 1fr;
+    }
     
-    // Smooth scroll for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const targetId = this.getAttribute('href');
-            if (targetId === '#') return;
-            
-            const targetElement = document.querySelector(targetId);
-            if (targetElement) {
-                targetElement.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
-        });
-    });
+    .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .cta-buttons .btn {
+        width: 200px;
+        text-align: center;
+        justify-content: center;
+    }
+    
+    .footer-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+    
+    .footer-links {
+        justify-content: center;
+    }
+    
+    .social-links {
+        justify-content: center;
+    }
+    
+    .portfolio-header {
+        padding: 100px 0 40px;
+    }
 }
 
-// WhatsApp integration for portfolio page
-function openWhatsApp(prefilledMessage = '') {
-    const phone = '919471640485';
-    const message = prefilledMessage || 'Hello! I saw your portfolio and want to book photography/videography services';
-    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
+@media (max-width: 480px) {
+    .portfolio-header {
+        padding: 90px 0 30px;
+    }
+    
+    .portfolio-header h1 {
+        font-size: 2rem;
+    }
+    
+    .portfolio-header p {
+        font-size: 1rem;
+    }
+    
+    .section-title {
+        font-size: 2rem;
+    }
+    
+    .portfolio-main {
+        padding: 60px 0;
+    }
+    
+    .portfolio-cta {
+        padding: 60px 0;
+    }
+    
+    .portfolio-cta h2 {
+        font-size: 2rem;
+    }
+    
+    .portfolio-cta p {
+        font-size: 1rem;
+    }
 }
 
-// Handle image errors on page load
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('img').forEach(img => {
-        img.onerror = function() {
-            handleImageError(this);
-        };
-    });
-});
+/* Utility Classes */
+.text-center {
+    text-align: center;
+}
 
-// Make functions globally available
-window.loadMorePortfolio = loadMorePortfolio;
-window.playVideo = playVideo;
-window.openWhatsApp = openWhatsApp;
-window.handleImageError = handleImageError;
+.mb-1 { margin-bottom: 1rem; }
+.mb-2 { margin-bottom: 2rem; }
+.mb-3 { margin-bottom: 3rem; }
+
+.mt-1 { margin-top: 1rem; }
+.mt-2 { margin-top: 2rem; }
+.mt-3 { margin-top: 3rem; }
+
+.hidden {
+    display: none !important;
+}
+
+.fade-in {
+    animation: fadeIn 0.6s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Ensure smooth theme transitions */
+.navbar,
+.portfolio-item-full,
+.filter-btn,
+.social-link {
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, color 0.3s ease;
+}
+
+/* Make body visible after loading */
+body.loaded {
+    visibility: visible;
+}
