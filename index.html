@@ -489,12 +489,16 @@
                         </div>
                     </div>
                 </div>
-                <form class="contact-form" id="contactForm" name="contact" method="POST" netlify data-netlify="true">
+                <form class="contact-form" id="contactForm" name="contact" method="POST" netlify>
+                    <input type="hidden" name="form-name" value="contact">
+                    
                     <h3>Send us a Message</h3>
+                    
                     <input type="text" name="name" placeholder="Your Name" required>
                     <input type="email" name="email" placeholder="Your Email" required>
                     <input type="tel" name="phone" placeholder="Your Phone">
                     <textarea name="message" placeholder="Your Message" rows="5" required></textarea>
+                    
                     <button type="submit" class="btn btn-primary">Send Message</button>
                 </form>
             </div>
@@ -562,6 +566,7 @@
     <script src="script.js"></script>
 </body>
 </html>
+
 
 
 
