@@ -261,12 +261,6 @@ body {
     border-color: #667eea;
 }
 
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-}
-
 .file-upload-group {
     display: flex;
     gap: 1rem;
@@ -327,11 +321,6 @@ body {
     gap: 0.5rem;
 }
 
-.item-actions .btn {
-    padding: 5px 10px;
-    font-size: 0.8rem;
-}
-
 /* Admin Table Styles */
 .admin-table-container {
     background: white;
@@ -362,14 +351,6 @@ body {
     background: #f8f9fa;
 }
 
-/* Admin Thumbnail */
-.admin-thumbnail {
-    width: 50px;
-    height: 50px;
-    object-fit: cover;
-    border-radius: 5px;
-}
-
 /* Category Badge */
 .category-badge {
     background: #667eea;
@@ -380,12 +361,10 @@ body {
     font-weight: 600;
 }
 
-/* Text Center */
 .text-center {
     text-align: center;
 }
 
-/* Error Text */
 .error {
     color: #e74c3c;
 }
@@ -428,7 +407,7 @@ body {
     padding: 1.5rem;
 }
 
-/* Image Upload Modal Styles */
+/* Image Upload Styles */
 .upload-instructions {
     margin-bottom: 1rem;
     padding: 1rem;
@@ -477,7 +456,6 @@ body {
     color: #ccc;
 }
 
-/* Upload Progress */
 .upload-progress {
     margin: 1rem 0;
 }
@@ -506,7 +484,6 @@ body {
     margin: 0;
 }
 
-/* File Input Styling */
 #imageFile {
     width: 100%;
     padding: 10px;
@@ -516,20 +493,9 @@ body {
     margin-bottom: 1rem;
 }
 
-#imageFile:hover {
-    border-color: #667eea;
-    background: #f8f9ff;
-}
-
-/* Upload Button States */
 #uploadImageBtn:disabled {
     background: #ccc;
     cursor: not-allowed;
-    transform: none;
-}
-
-#uploadImageBtn:disabled:hover {
-    background: #ccc;
     transform: none;
 }
 
@@ -554,19 +520,11 @@ body {
         grid-template-columns: 1fr;
     }
     
-    .form-row {
-        grid-template-columns: 1fr;
+    .file-upload-group {
+        flex-direction: column;
     }
     
     .admin-table-container {
         overflow-x: auto;
-    }
-    
-    .admin-table {
-        min-width: 600px;
-    }
-    
-    .file-upload-group {
-        flex-direction: column;
     }
 }
