@@ -2,6 +2,9 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded - initializing website');
     
+    // Initialize Firebase first
+    initFirebase();
+    
     // Initialize all systems
     initTheme();
     initNavigation();
@@ -10,13 +13,32 @@ document.addEventListener('DOMContentLoaded', function() {
     initBookingSystem();
     initContactForm();
     
-    // Load limited portfolio for home page (only 6 items)
+    // Load limited portfolio for home page
     loadLimitedPortfolio();
     
     console.log('Website initialized successfully');
 });
 
-// Theme Management
+// Firebase Initialization
+function initFirebase() {
+    // Your Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyC-25CvcxzGmFuw3wRg-T9U-eKPuckFw0c",
+        authDomain: "fototaker-studio.firebaseapp.com",
+        projectId: "fototaker-studio",
+        storageBucket: "fototaker-studio.firebasestorage.app",
+        messagingSenderId: "401638389477",
+        appId: "1:401638389477:web:a8af16d0f9b49bf8dc460c",
+        measurementId: "G-W4NT35YBQJ"
+    };
+
+    // Initialize Firebase only if not already initialized
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+}
+
+// Theme Management (YOUR EXISTING CODE IS PERFECT)
 function initTheme() {
     const themeToggle = document.getElementById('themeToggle');
     const body = document.body;
@@ -104,7 +126,7 @@ function initTheme() {
     window.addEventListener('scroll', updateNavbarBackground);
 }
 
-// Navigation Management
+// Navigation Management (YOUR EXISTING CODE IS PERFECT)
 function initNavigation() {
     const navToggle = document.getElementById('navToggle');
     const navMenu = document.getElementById('navMenu');
@@ -189,7 +211,7 @@ function initNavigation() {
     updateActiveNavLink();
 }
 
-// Portfolio System
+// Portfolio System - UPDATED
 // Load limited portfolio for home page
 async function loadLimitedPortfolio() {
     const portfolioGrid = document.querySelector('.portfolio-grid');
@@ -197,6 +219,7 @@ async function loadLimitedPortfolio() {
     if (!portfolioGrid) return;
     
     try {
+        // First try to load from Firebase
         const db = firebase.firestore();
         const querySnapshot = await db.collection('portfolio')
             .orderBy('createdAt', 'desc')
@@ -214,10 +237,25 @@ async function loadLimitedPortfolio() {
         if (portfolioData.length > 0) {
             displayPortfolioItems(portfolioData);
         } else {
-            displayDefaultPortfolio();
+            // If no Firebase data, try localStorage (from admin panel)
+            loadPortfolioFromLocalStorage();
         }
     } catch (error) {
-        console.log('Error loading portfolio:', error);
+        console.log('Error loading portfolio from Firebase:', error);
+        // Fallback to localStorage
+        loadPortfolioFromLocalStorage();
+    }
+}
+
+// Load portfolio from localStorage (admin panel data)
+function loadPortfolioFromLocalStorage() {
+    const portfolioGrid = document.querySelector('.portfolio-grid');
+    const portfolioData = JSON.parse(localStorage.getItem('portfolioData')) || [];
+    
+    if (portfolioData.length > 0) {
+        displayPortfolioItems(portfolioData);
+    } else {
+        // Final fallback - default portfolio
         displayDefaultPortfolio();
     }
 }
@@ -226,7 +264,12 @@ async function loadLimitedPortfolio() {
 function displayPortfolioItems(items) {
     const portfolioGrid = document.querySelector('.portfolio-grid');
     
-    portfolioGrid.innerHTML = items.map(item => `
+    if (!portfolioGrid) return;
+    
+    // Take only first 6 items for home page
+    const limitedItems = items.slice(0, 6);
+    
+    portfolioGrid.innerHTML = limitedItems.map(item => `
         <div class="portfolio-item">
             <img src="${item.image}" alt="${item.title}" class="portfolio-img" 
                  onerror="this.src='https://picsum.photos/400/600?random=${Math.floor(Math.random() * 100)}'">
@@ -241,9 +284,11 @@ function displayPortfolioItems(items) {
     initPortfolioAnimations();
 }
 
-// Default portfolio (when no Firebase data)
+// Default portfolio (when no data available)
 function displayDefaultPortfolio() {
     const portfolioGrid = document.querySelector('.portfolio-grid');
+    
+    if (!portfolioGrid) return;
     
     portfolioGrid.innerHTML = `
         <div class="portfolio-item">
@@ -293,7 +338,7 @@ function displayDefaultPortfolio() {
     initPortfolioAnimations();
 }
 
-// Initialize portfolio animations
+// Initialize portfolio animations (YOUR EXISTING CODE IS PERFECT)
 function initPortfolioAnimations() {
     const portfolioItems = document.querySelectorAll('.portfolio-item');
     const portfolioObserver = new IntersectionObserver((entries) => {
@@ -318,7 +363,7 @@ function initPortfolioAnimations() {
     });
 }
 
-// Service animations
+// Service animations (YOUR EXISTING CODE IS PERFECT)
 function initServiceAnimations() {
     const serviceCards = document.querySelectorAll('.service-card');
     const serviceObserver = new IntersectionObserver((entries) => {
@@ -343,7 +388,7 @@ function initServiceAnimations() {
     });
 }
 
-// Booking System
+// Booking System (YOUR EXISTING CODE IS PERFECT)
 function initBookingSystem() {
     const bookingForm = document.getElementById('bookingForm');
     
@@ -395,7 +440,7 @@ function initBookingSystem() {
     }
 }
 
-// Save booking to Firebase
+// Save booking to Firebase (YOUR EXISTING CODE IS PERFECT)
 async function saveBookingToFirebase(bookingData) {
     try {
         const db = firebase.firestore();
@@ -407,7 +452,7 @@ async function saveBookingToFirebase(bookingData) {
     }
 }
 
-// Contact Form Handler
+// Contact Form Handler (YOUR EXISTING CODE IS PERFECT)
 function initContactForm() {
     const contactForm = document.getElementById('contactForm');
     
@@ -451,7 +496,7 @@ function initContactForm() {
     }
 }
 
-// WhatsApp integration
+// WhatsApp integration (YOUR EXISTING CODE IS PERFECT)
 function openWhatsApp(prefilledMessage = '') {
     const phone = '919471640485';
     const message = prefilledMessage || 'Hello! I want to book photography/videography services';
@@ -459,7 +504,7 @@ function openWhatsApp(prefilledMessage = '') {
     window.open(url, '_blank');
 }
 
-// Scroll to booking with pre-selected service
+// Scroll to booking with pre-selected service (YOUR EXISTING CODE IS PERFECT)
 function scrollToBooking(serviceType) {
     const bookingSection = document.getElementById('booking');
     const serviceSelect = document.getElementById('serviceType');
@@ -473,7 +518,7 @@ function scrollToBooking(serviceType) {
     }
 }
 
-// Send WhatsApp notification for booking
+// Send WhatsApp notification for booking (YOUR EXISTING CODE IS PERFECT)
 function sendWhatsAppBookingNotification(bookingData) {
     const phone = '919471640485';
     const serviceName = getServiceDisplayName(bookingData.serviceType);
@@ -500,7 +545,7 @@ ${bookingData.message || 'No additional details'}
     window.open(whatsappURL, '_blank');
 }
 
-// Helper function to get service display name
+// Helper function to get service display name (YOUR EXISTING CODE IS PERFECT)
 function getServiceDisplayName(serviceKey) {
     const serviceNames = {
         'wedding-photography': 'Wedding Photography',
@@ -532,7 +577,7 @@ function getServiceDisplayName(serviceKey) {
     return serviceNames[serviceKey] || 'Photography Service';
 }
 
-// Helper function to get category display name
+// Helper function to get category display name (YOUR EXISTING CODE IS PERFECT)
 function getCategoryDisplayName(category) {
     const categoryMap = {
         'wedding': 'Wedding Photography',
@@ -544,7 +589,7 @@ function getCategoryDisplayName(category) {
     return categoryMap[category] || category;
 }
 
-// Notification system
+// Notification system (YOUR EXISTING CODE IS PERFECT)
 function showNotification(message, type = 'info') {
     const existingNotification = document.querySelector('.notification');
     if (existingNotification) {
@@ -599,7 +644,7 @@ function showNotification(message, type = 'info') {
     document.body.appendChild(notification);
 }
 
-// Handle image errors gracefully
+// Handle image errors gracefully (YOUR EXISTING CODE IS PERFECT)
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('img').forEach(img => {
         img.onerror = function() {
@@ -611,7 +656,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Make body visible after loading
+// Make body visible after loading (YOUR EXISTING CODE IS PERFECT)
 document.addEventListener('DOMContentLoaded', function() {
     document.body.style.visibility = 'visible';
 });
