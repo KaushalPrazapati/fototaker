@@ -33,7 +33,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Admin Dashboard Functions
 function initAdminDashboard() {
     // Check authentication
     if (localStorage.getItem('adminLoggedIn') !== 'true') {
@@ -44,6 +43,7 @@ function initAdminDashboard() {
     // Initialize systems
     initNavigation();
     initPortfolioManagement();
+    initVideosManagement(); // ✅ YEH LINE ADD KARO
     initModals();
     
     // Logout Handler
@@ -754,4 +754,5 @@ window.closeImageUploadModal = closeImageUploadModal;
 window.hidePortfolioForm = hidePortfolioForm;
 window.editPortfolioItem = editPortfolioItem;
 window.deletePortfolioItem = deletePortfolioItem;
+
 
