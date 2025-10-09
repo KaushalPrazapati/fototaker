@@ -159,7 +159,7 @@ function displayCompletePortfolio(items) {
     initPortfolioAnimations();
 }
 
-// Load videos and reels from Firebase (Single Document)
+// Load videos and reels from Firebase (Single Document) - UPDATED
 async function loadVideosAndReels() {
     const videosGrid = document.getElementById('videosGrid');
     
@@ -188,18 +188,18 @@ async function loadVideosAndReels() {
     }
 }
 
-// Display videos from single document
+// Display videos from single document - UPDATED
 function displayVideos(reels) {
     const videosGrid = document.getElementById('videosGrid');
     
     if (!videosGrid) return;
     
-    videosGrid.innerHTML = reels.map(reel => `
+    videosGrid.innerHTML = reels.map((reel, index) => `
         <div class="video-card" data-categories="${reel.category}">
             <div class="video-thumbnail">
                 <img src="${reel.thumbnail}" alt="${reel.title}"
                      onerror="this.src='https://picsum.photos/400/600?random=${Math.floor(Math.random() * 100)}'">
-                <button class="video-play-btn" data-video="${reel.url}">
+                <button class="video-play-btn" data-video="${reel.url}" data-title="${reel.title}">
                     <i class="fas fa-play"></i>
                 </button>
                 ${reel.duration ? `<div class="video-duration">${reel.duration}</div>` : ''}
@@ -219,7 +219,7 @@ function displayVideos(reels) {
     initVideoPlayButtons();
 }
 
-// Initialize video play buttons
+// Initialize video play buttons - UPDATED
 function initVideoPlayButtons() {
     const playButtons = document.querySelectorAll('.video-play-btn');
     
@@ -229,14 +229,54 @@ function initVideoPlayButtons() {
             e.stopPropagation();
             
             const videoUrl = this.getAttribute('data-video');
+            const videoTitle = this.getAttribute('data-title');
+            
             if (videoUrl) {
-                playVideo(videoUrl);
+                // Check if video URL is valid and supported
+                if (isVideoUrlSupported(videoUrl)) {
+                    playVideo(videoUrl, videoTitle);
+                } else {
+                    // If video not supported, open in new tab or show message
+                    handleUnsupportedVideo(videoUrl, videoTitle);
+                }
             }
         });
     });
 }
 
-// Initialize video modal
+// Check if video URL is supported - NEW FUNCTION
+function isVideoUrlSupported(url) {
+    const supportedFormats = ['.mp4', '.webm', '.ogg', '.mov'];
+    const videoExtensions = supportedFormats.filter(ext => url.toLowerCase().includes(ext));
+    
+    // Also check if it's a YouTube or Vimeo URL
+    const isYouTube = url.includes('youtube.com') || url.includes('youtu.be');
+    const isVimeo = url.includes('vimeo.com');
+    const isInstagram = url.includes('instagram.com');
+    
+    return videoExtensions.length > 0 || isYouTube || isVimeo || isInstagram;
+}
+
+// Handle unsupported video URLs - NEW FUNCTION
+function handleUnsupportedVideo(url, title) {
+    // If it's a YouTube, Vimeo, or Instagram link, open in new tab
+    if (url.includes('youtube.com') || url.includes('youtu.be') || 
+        url.includes('vimeo.com') || url.includes('instagram.com')) {
+        window.open(url, '_blank');
+    } else {
+        // Show error message for unsupported video formats
+        showNotification(`Video format not supported: ${title}. Please try opening in a new tab.`, 'error');
+        
+        // Optional: Try to open in new tab anyway
+        setTimeout(() => {
+            if (confirm(`Cannot play "${title}" in browser. Open in new tab?`)) {
+                window.open(url, '_blank');
+            }
+        }, 1000);
+    }
+}
+
+// Initialize video modal - UPDATED
 function initVideoModal() {
     // Check if modal already exists
     let modal = document.querySelector('.video-modal');
@@ -246,6 +286,7 @@ function initVideoModal() {
         modal.innerHTML = `
             <div class="video-modal-content">
                 <button class="close-modal">&times;</button>
+                <h3 class="video-modal-title">Video</h3>
                 <video controls>
                     Your browser does not support the video tag.
                 </video>
@@ -273,21 +314,54 @@ function initVideoModal() {
     });
 }
 
-// Play video in modal
-function playVideo(videoUrl) {
+// Play video in modal - UPDATED
+function playVideo(videoUrl, videoTitle = 'Video') {
     const modal = document.querySelector('.video-modal');
     const video = modal.querySelector('video');
+    const modalTitle = modal.querySelector('.video-modal-title');
     
     if (modal && video) {
-        video.src = videoUrl;
+        // Set video title
+        if (modalTitle) {
+            modalTitle.textContent = videoTitle;
+        }
+        
+        // Clear previous source
+        video.innerHTML = '';
+        
+        // Create new source element
+        const source = document.createElement('source');
+        source.src = videoUrl;
+        
+        // Set type based on file extension
+        if (videoUrl.includes('.mp4')) {
+            source.type = 'video/mp4';
+        } else if (videoUrl.includes('.webm')) {
+            source.type = 'video/webm';
+        } else if (videoUrl.includes('.ogg')) {
+            source.type = 'video/ogg';
+        }
+        
+        video.appendChild(source);
+        video.load(); // Reload the video element
+        
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
         
-        // Play video
-        video.play().catch(e => {
-            console.log('Video play failed:', e);
-            showNotification('Video playback failed. Please check the video URL.', 'error');
-        });
+        // Play video with error handling
+        const playPromise = video.play();
+        
+        if (playPromise !== undefined) {
+            playPromise.catch(e => {
+                console.log('Video play failed:', e);
+                showNotification(`Cannot play "${videoTitle}". The video format may not be supported.`, 'error');
+                
+                // Close modal after error
+                setTimeout(() => {
+                    closeVideoModal();
+                }, 3000);
+            });
+        }
     }
 }
 
@@ -353,7 +427,7 @@ function showDefaultPortfolio() {
     displayCompletePortfolio(defaultItems);
 }
 
-// Show default videos (fallback)
+// Show default videos with WORKING video URLs - UPDATED
 function showDefaultVideos() {
     const videosGrid = document.getElementById('videosGrid');
     
@@ -361,25 +435,25 @@ function showDefaultVideos() {
     
     const defaultVideos = [
         { 
-            title: 'Wedding Highlights', 
+            title: 'Wedding Highlights Reel', 
             thumbnail: 'https://picsum.photos/400/600?random=21',
-            url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+            url: 'https://assets.codepen.io/3364143/20170817_202252_1.mp4',
             category: 'wedding',
             duration: '0:30',
             platform: 'instagram'
         },
         { 
-            title: 'Pre-Wedding Reel', 
+            title: 'Pre-Wedding Couple Shoot', 
             thumbnail: 'https://picsum.photos/400/600?random=22',
-            url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+            url: 'https://assets.codepen.io/3364143/20170817_202252_1.mp4',
             category: 'pre-wedding',
             duration: '0:45',
             platform: 'instagram'
         },
         { 
-            title: 'Portrait Session', 
+            title: 'Portrait Session Reel', 
             thumbnail: 'https://picsum.photos/400/600?random=23',
-            url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+            url: 'https://assets.codepen.io/3364143/20170817_202252_1.mp4',
             category: 'portrait',
             duration: '0:25',
             platform: 'instagram'
