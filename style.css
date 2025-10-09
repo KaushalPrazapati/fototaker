@@ -13,6 +13,7 @@
     --text-light: #d1d5db;
     --bg-light: #111827;
     --bg-secondary: #1f2937;
+    --bg-primary: #111827; /* ADDED MISSING VARIABLE */
     --card-bg: #374151;
     --border-color: #4b5563;
     --shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
@@ -28,6 +29,7 @@
     --text-light: #6b7280;
     --bg-light: #ffffff;
     --bg-secondary: #faf8fc;
+    --bg-primary: #ffffff; /* ADDED MISSING VARIABLE */
     --card-bg: #ffffff;
     --border-color: #b2bce7;
     --shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
@@ -47,6 +49,7 @@ body {
     color: var(--text-dark);
     background: var(--bg-light);
     transition: all 0.3s ease;
+    visibility: hidden; /* Prevent FOUC */
 }
 
 .container {
