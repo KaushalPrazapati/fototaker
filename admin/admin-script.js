@@ -106,7 +106,6 @@ function initNavigation() {
 function initPortfolioManagement() {
     const addBtn = document.getElementById('addPortfolioBtn');
     const portfolioForm = document.getElementById('portfolioForm');
-    const portfolioGrid = document.querySelector('.portfolio-grid-admin');
     
     // Load existing portfolio items
     loadPortfolioItems();
@@ -495,13 +494,11 @@ function initModals() {
     const uploadBtn = document.getElementById('uploadImageBtn');
     if (uploadBtn) {
         uploadBtn.addEventListener('click', function() {
-            // In a real app, you would upload to a server
-            // For demo, we'll just use the data URL
             const preview = document.getElementById('imagePreview').src;
             if (preview) {
                 document.getElementById('itemImage').value = preview;
                 modal.style.display = 'none';
-                showNotification('Image uploaded! (Note: In real app, this would save to server)', 'success');
+                showNotification('Image uploaded!', 'success');
             }
         });
     }
