@@ -82,9 +82,9 @@
                         <div class="form-group">
                             <label>Image URL</label>
                             <div class="file-upload-group">
-                                <input type="text" id="itemImage" placeholder="Paste image URL">
+                                <input type="text" id="itemImage" placeholder="Paste image URL" required>
                                 <button type="button" class="btn btn-secondary" onclick="openImageUpload()">
-                                    <i class="fas fa-upload"></i> Upload
+                                    <i class="fas fa-upload"></i> Upload to ImgBB
                                 </button>
                             </div>
                         </div>
@@ -219,15 +219,35 @@
     <div id="imageUploadModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Upload Image</h3>
+                <h3>Upload Image to ImgBB</h3>
                 <span class="close">&times;</span>
             </div>
             <div class="modal-body">
+                <div class="upload-instructions">
+                    <p><strong>Select image to upload:</strong></p>
+                    <p class="small-text">Max size: 32MB | Formats: JPG, PNG, GIF, WEBP</p>
+                </div>
+                
                 <input type="file" id="imageFile" accept="image/*">
+                
                 <div class="upload-preview">
                     <img id="imagePreview" src="" alt="Preview">
+                    <div class="preview-placeholder">
+                        <i class="fas fa-image"></i>
+                        <p>Image preview will appear here</p>
+                    </div>
                 </div>
-                <button id="uploadImageBtn" class="btn btn-primary">Upload</button>
+                
+                <div class="upload-progress" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <p class="progress-text">Uploading...</p>
+                </div>
+                
+                <button id="uploadImageBtn" class="btn btn-primary" disabled>
+                    <i class="fas fa-cloud-upload-alt"></i> Upload to ImgBB
+                </button>
             </div>
         </div>
     </div>
