@@ -752,7 +752,10 @@ async function deleteVideo(videoId) {
 window.openImageUpload = openImageUpload;
 window.closeImageUploadModal = closeImageUploadModal;
 window.hidePortfolioForm = hidePortfolioForm;
+window.hideVideoForm = hideVideoForm;
 window.editPortfolioItem = editPortfolioItem;
 window.deletePortfolioItem = deletePortfolioItem;
+window.editVideo = editVideo;
+window.deleteVideo = deleteVideo;
 
 
