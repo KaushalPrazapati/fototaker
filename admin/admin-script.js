@@ -1,3 +1,6 @@
+// ImgBB Configuration
+const IMGBB_API_KEY = 'e473f5abe25409c5e97480f6a03bb992';
+
 // Admin Login System
 document.addEventListener('DOMContentLoaded', function() {
     // Check if user is already logged in
@@ -458,20 +461,20 @@ async function deleteVideo(index) {
     }
 }
 
-// Modal Functions
+// Image Upload Functions
 function initModals() {
     const modal = document.getElementById('imageUploadModal');
     const closeBtn = document.querySelector('.modal .close');
     
     if (closeBtn) {
         closeBtn.addEventListener('click', function() {
-            modal.style.display = 'none';
+            closeImageUploadModal();
         });
     }
     
     window.addEventListener('click', function(e) {
         if (e.target === modal) {
-            modal.style.display = 'none';
+            closeImageUploadModal();
         }
     });
     
@@ -479,14 +482,7 @@ function initModals() {
     const imageFile = document.getElementById('imageFile');
     if (imageFile) {
         imageFile.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('imagePreview').src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
+            handleImageSelect(e);
         });
     }
     
@@ -494,18 +490,139 @@ function initModals() {
     const uploadBtn = document.getElementById('uploadImageBtn');
     if (uploadBtn) {
         uploadBtn.addEventListener('click', function() {
-            const preview = document.getElementById('imagePreview').src;
-            if (preview) {
-                document.getElementById('itemImage').value = preview;
-                modal.style.display = 'none';
-                showNotification('Image uploaded!', 'success');
-            }
+            uploadToImgBB();
         });
     }
 }
 
+function handleImageSelect(e) {
+    const file = e.target.files[0];
+    const uploadBtn = document.getElementById('uploadImageBtn');
+    const preview = document.getElementById('imagePreview');
+    const placeholder = document.querySelector('.preview-placeholder');
+    
+    if (file) {
+        // File validation
+        const maxSize = 32 * 1024 * 1024; // 32MB
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        
+        if (file.size > maxSize) {
+            showNotification('Image size should be less than 32MB', 'error');
+            resetImageUpload();
+            return;
+        }
+        
+        if (!allowedTypes.includes(file.type)) {
+            showNotification('Please select a valid image file (JPG, PNG, GIF, WEBP)', 'error');
+            resetImageUpload();
+            return;
+        }
+        
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            if (placeholder) placeholder.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+        
+        // Enable upload button
+        uploadBtn.disabled = false;
+    } else {
+        resetImageUpload();
+    }
+}
+
+async function uploadToImgBB() {
+    const fileInput = document.getElementById('imageFile');
+    const uploadBtn = document.getElementById('uploadImageBtn');
+    const progress = document.querySelector('.upload-progress');
+    const progressFill = document.querySelector('.progress-fill');
+    const progressText = document.querySelector('.progress-text');
+    
+    if (!fileInput.files[0]) {
+        showNotification('Please select an image first', 'error');
+        return;
+    }
+    
+    const file = fileInput.files[0];
+    
+    try {
+        // Show progress
+        uploadBtn.disabled = true;
+        progress.style.display = 'block';
+        progressFill.style.width = '30%';
+        progressText.textContent = 'Uploading to ImgBB...';
+        
+        // Create form data
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        // Upload to ImgBB
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        progressFill.style.width = '70%';
+        progressText.textContent = 'Processing image...';
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            progressFill.style.width = '100%';
+            progressText.textContent = 'Upload successful!';
+            
+            // Get the image URL
+            const imageUrl = result.data.url;
+            const thumbUrl = result.data.thumb.url; // Thumbnail URL
+            const displayUrl = result.data.display_url;
+            
+            // Set the image URL in the form
+            document.getElementById('itemImage').value = displayUrl;
+            
+            // Show success message
+            setTimeout(() => {
+                showNotification('Image uploaded successfully to ImgBB!', 'success');
+                closeImageUploadModal();
+                resetImageUpload();
+            }, 1000);
+            
+        } else {
+            throw new Error(result.error.message || 'Upload failed');
+        }
+        
+    } catch (error) {
+        console.error('ImgBB Upload Error:', error);
+        showNotification('Image upload failed: ' + error.message, 'error');
+        resetImageUpload();
+    }
+}
+
+function resetImageUpload() {
+    const fileInput = document.getElementById('imageFile');
+    const uploadBtn = document.getElementById('uploadImageBtn');
+    const preview = document.getElementById('imagePreview');
+    const placeholder = document.querySelector('.preview-placeholder');
+    const progress = document.querySelector('.upload-progress');
+    
+    fileInput.value = '';
+    uploadBtn.disabled = true;
+    preview.src = '';
+    preview.style.display = 'none';
+    if (placeholder) placeholder.style.display = 'flex';
+    progress.style.display = 'none';
+}
+
+function closeImageUploadModal() {
+    document.getElementById('imageUploadModal').style.display = 'none';
+    resetImageUpload();
+}
+
 function openImageUpload() {
     document.getElementById('imageUploadModal').style.display = 'block';
+    resetImageUpload();
 }
 
 // Notification system
