@@ -80,9 +80,8 @@ Hi, I'm a passionate photographer and videographer specializing in capturing lif
 - **WhatsApp:** [Message Directly](https://wa.me/919471640485)
 
 ### 🌐 Social Media
-- **Instagram:** [@fototakerkd](https://instagram.com/fototakerkd)
-- **Facebook:** [FotoTaker](https://facebook.com/fototaker)
-- **YouTube:** [FotoTaker](https://youtube.com/fototaker)
+- **Instagram:** [FotoTaker](https://instagram.com/fototakerkd)
+- **YouTube:** [FotoTaker](https://youtube.com/@foto-taker)
 
 ## 💰 Pricing & Packages
 
