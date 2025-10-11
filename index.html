@@ -489,54 +489,44 @@
                         </div>
                     </div>
                 </div>
-                <!-- <form class="contact-form" id="contactForm" name="contact" method="POST" netlify>
-                    <input type="hidden" name="form-name" value="contact"> -->
+                
                 <form class="contact-form" action="https://formspree.io/f/mzzjjqlv" method="POST">
-                    <input type="hidden" name="_subject" value="New Message from FotoTaker Website">
-                    
-                    <h3>Send us a Message</h3>
-                    
-                    <div class="form-group">
-                        <label for="contact-name">Your Name *</label>
-                        <input type="text" id="contact-name" name="name" placeholder="Enter your name" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="contact-email">Your Email *</label>
-                        <input type="email" id="contact-email" name="email" placeholder="Enter your email" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="contact-phone">Phone Number</label>
-                        <input type="tel" id="contact-phone" name="phone" placeholder="Your phone number">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="contact-message">Your Message *</label>
-                        <textarea id="contact-message" name="message" placeholder="Tell us how we can help you..." rows="5" required></textarea>
-                    </div>
-                    
-                    <!-- Formspree honeypot spam protection -->
-                    <input type="text" name="_gotcha" style="display:none">
-                    
-                    <button type="submit" class="btn btn-primary btn-block">
-                        <i class="fas fa-paper-plane"></i> Send Message
-                    </button>
-                    
-                    <p class="form-note">
-                        <i class="fas fa-shield-alt"></i> We'll respond within 2 hours
-                    </p>
-                </form>
-                    
-                    <!-- <h3>Send us a Message</h3>
-                    
-                    <input type="text" name="name" placeholder="Your Name" required>
-                    <input type="email" name="email" placeholder="Your Email" required>
-                    <input type="tel" name="phone" placeholder="Your Phone">
-                    <textarea name="message" placeholder="Your Message" rows="5" required></textarea>
-                    
-                    <button type="submit" class="btn btn-primary">Send Message</button>
-                </form> -->
+                <input type="hidden" name="_subject" value="📸 New Message - FotoTaker Website">
+                <input type="hidden" name="_replyto" placeholder="Your Email">
+                
+                <h3>Send us a Message</h3>
+                
+                <div class="form-group">
+                    <label for="contact-name">Your Name *</label>
+                    <input type="text" id="contact-name" name="name" placeholder="Enter your full name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="contact-email">Your Email *</label>
+                    <input type="email" id="contact-email" name="email" placeholder="Enter your email address" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="contact-phone">Phone Number</label>
+                    <input type="tel" id="contact-phone" name="phone" placeholder="Your WhatsApp number">
+                </div>
+                
+                <div class="form-group">
+                    <label for="contact-message">Your Message *</label>
+                    <textarea id="contact-message" name="message" placeholder="Tell us about your photography needs, event details, budget..." rows="5" required></textarea>
+                </div>
+                
+                <!-- Spam protection -->
+                <input type="text" name="_gotcha" style="display:none">
+                
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fas fa-paper-plane"></i> Send Message
+                </button>
+                
+                <p class="form-note">
+                    <i class="fas fa-clock"></i> We'll respond within 2 hours via email/WhatsApp
+                </p>
+            </form>
             </div>
         </div>
     </section>
@@ -602,6 +592,7 @@
     <script src="script.js"></script>
 </body>
 </html>
+
 
 
 
