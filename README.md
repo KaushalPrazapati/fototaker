@@ -161,5 +161,9 @@ Feel free to fork this project and submit pull requests for any improvements.
 
 ---
 
-*Professional Website | Kaushal Prazapati*
-```
+## 💚 Credits  
+Built with patience, caffeine, and pixels.  
+> **Made with ❤️ by [Kaushal Kumar](https://github.com/KaushalPrazapati)**  
+> Every frame, every div — crafted with purpose.
+
+---
