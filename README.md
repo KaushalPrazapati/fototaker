@@ -1,118 +1,75 @@
-# 📸 FotoTaker - Personal Photography & Videography Portfolio
+# 📸 FotoTaker – Personal Photography & Videography Portfolio  
 
-A professional personal portfolio website for showcasing photography and videography work with complete content management system.
+A clean, modern portfolio website for showcasing photography and videography work — fully responsive, Firebase-powered, and built from scratch using pure HTML, CSS, and JavaScript.  
 
-## 🌟 About Me
-
-Hi, I'm a passionate photographer and videographer specializing in capturing life's most precious moments. From weddings to portraits, events to creative shoots - I turn moments into timeless memories.
-
-## 🎯 Specializations
-
-### 📷 Photography
-- **Wedding Photography** - Candid & traditional coverage
-- **Pre-Wedding Shoots** - Romantic couple photoshoots  
-- **Portrait Photography** - Professional individual & family portraits
-- **Event Photography** - Birthdays, corporate events, ceremonies
-- **Creative Photography** - Conceptual and artistic shoots
-
-### 🎥 Videography
-- **Wedding Films** - Cinematic wedding coverage
-- **Pre-Wedding Films** - Love story narratives
-- **Event Videography** - Complete event documentation
-- **Drone Photography** - Aerial shots and perspectives
-- **Short Films** - Creative storytelling
-
-## 🚀 Live Website
-
-**Visit:** [https://fototaker.netlify.app](https://fototaker.netlify.app)
-
-## 💼 Services Offered
-
-### 🎊 Wedding Services
-- Complete wedding photography & videography
-- Candid moments coverage
-- Traditional ceremony documentation
-- Pre-wedding shoots
-- Cinematic wedding films
-
-### 💑 Pre-Wedding Services
-- Romantic couple photoshoots
-- Location-based sessions
-- Theme-based shoots
-- Love story films
-
-### 🎉 Event Services
-- Birthday celebrations
-- Anniversary parties
-- Corporate events
-- Baby showers
-- Engagement functions
-
-### 🚀 Specialized Services
-- Drone aerial photography
-- Professional portrait sessions
-- Family photography
-- Maternity shoots
-- Commercial photography
-
-## 🛠️ Features
-
-### 🌐 Website Features
-- **Professional Portfolio** - Showcase best work
-- **Service Catalog** - Detailed service offerings
-- **Contact Integration** - Easy booking & inquiries
-- **Responsive Design** - Perfect on all devices
-- **Dark/Light Theme** - Customizable viewing experience
-- **Fast Loading** - Optimized for performance
-
-### ⚙️ Admin Features
-- **Easy Content Management** - Update portfolio anytime
-- **Image Upload** - Add new work instantly
-- **Real-time Updates** - Changes go live immediately
-- **Secure Access** - Protected admin panel
-
-## 📞 Get In Touch
-
-### 📱 Contact Details
-- **Phone:** +91 9471640485 | +91 7463937610
-- **Email:** fototakerkd@gmail.com
-- **Website:** [fototaker.netlify.app](https://fototaker.netlify.app)
-- **WhatsApp:** [Message Directly](https://wa.me/919471640485)
-
-### 🌐 Social Media
-- **Instagram:** [FotoTaker](https://instagram.com/fototakerkd)
-- **YouTube:** [FotoTaker](https://youtube.com/@foto-taker)
-
-## 💰 Pricing & Packages
-
-Custom packages available for all services. Contact for personalized quotes based on:
-- Event duration
-- Number of photographers/videographers
-- Delivery timeline
-- Additional services required
-
-## 📍 Service Areas
-
-Available for assignments across the city and destination weddings.
-
-## 🎨 My Approach
-
-I believe in capturing authentic emotions and creating visual stories that you'll cherish forever. My style blends traditional techniques with contemporary creativity to deliver memories that stand the test of time.
-
-## 🔧 Technical Setup
-
-### For Clients:
-- Simply visit the website to view my work
-- Use contact form for inquiries
-- WhatsApp for quick responses
-
-
-## 🤝 Let's Work Together
-
-I'm always excited to take on new projects and create beautiful memories. Whether it's your wedding, a special event, or a creative shoot - let's discuss how we can make it extraordinary!
+🔗 **Live:** [fototaker.netlify.app](https://fototaker.netlify.app)  
+👨‍💻 **Developer:** [Kaushal Kumar](https://github.com/KaushalPrazapati)  
 
 ---
 
-**📸 Capturing Moments, Creating Memories 🎥**
+## 🚀 Highlights  
+- Dynamic portfolio management with Firebase  
+- Admin panel for uploading & editing projects  
+- Responsive UI with smooth animations  
+- Fast CI/CD deployment via Netlify  
+- Minimal design focused on visuals & speed  
 
-*FotoTaker - We Make Your Moment Memorable Forever*
+---
+
+## 🛠 Tech Stack  
+| Category | Technologies |
+|-----------|--------------|
+| **Frontend** | HTML5, CSS3, JavaScript |
+| **Backend / Database** | Firebase |
+| **Hosting** | Netlify |
+| **Version Control** | Git & GitHub |
+
+---
+
+## 💡 About the Project  
+FotoTaker was built to give creators full control over how they present their art online.  
+It’s simple yet powerful — a space where visual storytelling meets clean web architecture.  
+
+> *“Har tag me emotion, har div me dedication.”*  
+
+---
+
+## 🧩 Folder Structure  
+
+fototaker/
+├── admin/ # Admin panel files
+
+├── data/ # JSON data for portfolio
+
+├── image/ # Static assets
+
+├── portfolio/ # Portfolio HTML pages
+
+├── firebase.js # Firebase config
+
+├── index.html # Landing page
+
+├── script.js # Core logic
+
+├── style.css # Main stylesheet
+
+└── README.md
+
+
+---
+
+## 🏁 Future Enhancements  
+- 🌓 Dark / Light theme toggle  
+- 📨 Contact form with email automation  
+- 📰 Blog section for photo stories  
+- 📊 Analytics dashboard for admin  
+
+---
+
+## 💚 Credits  
+Built with patience, caffeine, and pixels.  
+> **Made with ❤️ by [Kaushal Kumar](https://github.com/KaushalPrazapati)**  
+> Every frame, every div — crafted with purpose.
+
+---
+
