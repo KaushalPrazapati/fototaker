@@ -189,39 +189,51 @@ function initNavigation() {
     updateActiveNavLink();
 }
 
-// Portfolio System - COMPLETELY FIXED
-let currentPortfolioPage = 0;
-const portfolioPerPage = 6;
+// ===== PORTFOLIO SYSTEM - SEPARATE IMAGES AND VIDEOS SECTIONS =====
 
-// Load limited portfolio for home page
+// Load portfolio for home page with separate sections
 async function loadLimitedPortfolio() {
-    const portfolioGrid = document.querySelector('.portfolio-grid');
-    
-    if (!portfolioGrid) return;
-    
     try {
-        console.log('Loading portfolio from Firebase...');
+        console.log('Loading portfolio with separate sections from Firebase...');
         
-        // First try to load from Firebase
+        // Load portfolio images
         const db = firebase.firestore();
-        const querySnapshot = await db.collection('portfolio')
+        const portfolioSnapshot = await db.collection('portfolio')
             .orderBy('createdAt', 'desc')
-            .limit(portfolioPerPage)
+            .limit(6) // Load 6 images for home page
             .get();
         
         const portfolioData = [];
-        querySnapshot.forEach((doc) => {
+        portfolioSnapshot.forEach((doc) => {
             const data = doc.data();
             portfolioData.push({
                 id: doc.id,
+                type: 'image',
                 ...data
             });
         });
         
-        console.log('Portfolio data loaded:', portfolioData);
+        // Load videos for portfolio
+        const videosSnapshot = await db.collection('videos')
+            .orderBy('createdAt', 'desc')
+            .limit(3) // Load 3 videos for home page
+            .get();
         
-        if (portfolioData.length > 0) {
-            displayPortfolioItems(portfolioData);
+        const videosData = [];
+        videosSnapshot.forEach((doc) => {
+            const data = doc.data();
+            videosData.push({
+                id: doc.id,
+                type: 'video',
+                ...data
+            });
+        });
+        
+        console.log('Portfolio images loaded:', portfolioData.length);
+        console.log('Portfolio videos loaded:', videosData.length);
+        
+        if (portfolioData.length > 0 || videosData.length > 0) {
+            displayPortfolioSections(portfolioData, videosData);
         } else {
             // If no Firebase data, try localStorage
             loadPortfolioFromLocalStorage();
@@ -233,63 +245,50 @@ async function loadLimitedPortfolio() {
     }
 }
 
-// Load more portfolio items
-async function loadMorePortfolio() {
-    try {
-        const db = firebase.firestore();
-        currentPortfolioPage++;
-        
-        const querySnapshot = await db.collection('portfolio')
-            .orderBy('createdAt', 'desc')
-            .limit(portfolioPerPage)
-            .startAfter(currentPortfolioPage * portfolioPerPage)
-            .get();
-        
-        const portfolioData = [];
-        querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            portfolioData.push({
-                id: doc.id,
-                ...data
-            });
-        });
-        
-        if (portfolioData.length > 0) {
-            displayPortfolioItems(portfolioData, true);
-        } else {
-            showNotification('No more portfolio items to load!', 'info');
-        }
-    } catch (error) {
-        console.error('Error loading more portfolio:', error);
-        showNotification('Error loading more portfolio items', 'error');
-    }
-}
-
 // Load portfolio from localStorage (admin panel data)
 function loadPortfolioFromLocalStorage() {
-    const portfolioGrid = document.querySelector('.portfolio-grid');
     const portfolioData = JSON.parse(localStorage.getItem('portfolioData')) || [];
+    const videoData = JSON.parse(localStorage.getItem('videoData')) || [];
     
-    if (portfolioData.length > 0) {
-        displayPortfolioItems(portfolioData.slice(0, portfolioPerPage));
+    const imagesData = portfolioData.slice(0, 6).map(item => ({ ...item, type: 'image' }));
+    const videosData = videoData.slice(0, 3).map(item => ({ ...item, type: 'video' }));
+    
+    if (imagesData.length > 0 || videosData.length > 0) {
+        displayPortfolioSections(imagesData, videosData);
     } else {
         // Final fallback - default portfolio
         displayDefaultPortfolio();
     }
 }
 
-// Display portfolio items
-function displayPortfolioItems(items, append = false) {
+// Display portfolio in separate sections
+function displayPortfolioSections(imagesData, videosData) {
+    displayPortfolioImages(imagesData);
+    displayPortfolioVideos(videosData);
+}
+
+// Display portfolio images
+function displayPortfolioImages(imagesData) {
     const portfolioGrid = document.querySelector('.portfolio-grid');
     
     if (!portfolioGrid) return;
     
-    const portfolioHTML = items.map(item => `
-        <div class="portfolio-item">
+    if (imagesData.length === 0) {
+        portfolioGrid.innerHTML = `
+            <div class="loading" style="grid-column: 1 / -1;">
+                <p>No portfolio images available yet.</p>
+                <p>Check back later for updates!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const portfolioHTML = imagesData.map(item => `
+        <div class="portfolio-item" data-type="image" data-id="${item.id}">
             <img src="${item.image || 'https://picsum.photos/400/600?random=' + Math.floor(Math.random() * 100)}" 
                  alt="${item.title || 'Portfolio Image'}" 
                  class="portfolio-img"
-                 onerror="this.src='https://picsum.photos/400/600?random=' + Math.floor(Math.random() * 100)">
+                 onerror="handleImageError(this)">
             <div class="portfolio-overlay">
                 <h3>${item.title || 'Portfolio Item'}</h3>
                 ${item.description ? `<p>${item.description}</p>` : ''}
@@ -298,52 +297,162 @@ function displayPortfolioItems(items, append = false) {
         </div>
     `).join('');
     
-    if (append) {
-        portfolioGrid.innerHTML += portfolioHTML;
-    } else {
-        portfolioGrid.innerHTML = portfolioHTML;
-    }
-    
+    portfolioGrid.innerHTML = portfolioHTML;
     initPortfolioAnimations();
+    initPortfolioModal();
 }
 
-// Default portfolio (when no data available)
-function displayDefaultPortfolio() {
-    const portfolioGrid = document.querySelector('.portfolio-grid');
+// Display portfolio videos
+function displayPortfolioVideos(videosData) {
+    const videosGrid = document.querySelector('.videos-grid');
     
-    if (!portfolioGrid) return;
+    if (!videosGrid) return;
     
-    const defaultPortfolio = [
-        { title: 'Wedding Photography', description: 'Beautiful moments from special days', category: 'wedding' },
-        { title: 'Pre-Wedding Shoots', description: 'Romantic couple photoshoots', category: 'pre-wedding' },
-        { title: 'Portrait Photography', description: 'Professional portrait sessions', category: 'portrait' },
-        { title: 'Event Photography', description: 'Capturing special occasions', category: 'events' },
-        { title: 'Drone Photography', description: 'Aerial views and perspectives', category: 'drone' },
-        { title: 'Candid Photography', description: 'Natural and spontaneous moments', category: 'portrait' }
-    ];
+    if (videosData.length === 0) {
+        videosGrid.innerHTML = `
+            <div class="loading" style="grid-column: 1 / -1;">
+                <p>No videos available yet.</p>
+                <p>Check back later for video content!</p>
+            </div>
+        `;
+        return;
+    }
     
-    const portfolioHTML = defaultPortfolio.map((item, index) => `
-        <div class="portfolio-item">
-            <img src="https://picsum.photos/400/600?random=${index + 10}" 
-                 alt="${item.title}" 
-                 class="portfolio-img"
-                 onerror="this.src='https://picsum.photos/400/600?random=${index + 20}'">
-            <div class="portfolio-overlay">
-                <h3>${item.title}</h3>
-                <p>${item.description}</p>
-                <small>${getCategoryDisplayName(item.category)}</small>
+    const videosHTML = videosData.map(item => `
+        <div class="video-item" data-type="video" data-id="${item.id}">
+            <img src="${item.thumbnail || 'https://picsum.photos/400/225?random=' + Math.floor(Math.random() * 100)}" 
+                 alt="${item.title || 'Video'}" 
+                 class="video-thumbnail"
+                 onerror="handleImageError(this)">
+            <div class="video-play-icon" onclick="playVideo('${item.url}', '${item.platform}', '${item.title || 'Video'}')">
+                <i class="fas fa-play"></i>
+            </div>
+            <div class="video-badge">
+                <i class="fab fa-youtube"></i> Video
+            </div>
+            <div class="video-overlay">
+                <h3>${item.title || 'Video'}</h3>
+                <p>${item.description || 'Watch our video content'}</p>
+                <small>${getCategoryDisplayName(item.category) || 'Video'}</small>
             </div>
         </div>
     `).join('');
     
-    portfolioGrid.innerHTML = portfolioHTML;
-    initPortfolioAnimations();
+    videosGrid.innerHTML = videosHTML;
+    initVideoAnimations();
 }
 
-// Initialize portfolio animations (FIXED)
+// Default portfolio (when no data available)
+function displayDefaultPortfolio() {
+    const defaultImages = [
+        { title: 'Wedding Photography', description: 'Beautiful moments from special days', category: 'wedding', type: 'image' },
+        { title: 'Pre-Wedding Shoots', description: 'Romantic couple photoshoots', category: 'pre-wedding', type: 'image' },
+        { title: 'Portrait Photography', description: 'Professional portrait sessions', category: 'portrait', type: 'image' },
+        { title: 'Event Photography', description: 'Capturing special occasions', category: 'events', type: 'image' },
+        { title: 'Drone Photography', description: 'Aerial views and perspectives', category: 'drone', type: 'image' },
+        { title: 'Candid Photography', description: 'Natural and spontaneous moments', category: 'portrait', type: 'image' }
+    ];
+    
+    const defaultVideos = [
+        { title: 'Wedding Highlights', description: 'Cinematic wedding film', category: 'wedding', type: 'video' },
+        { title: 'Pre-Wedding Film', description: 'Romantic couple video', category: 'pre-wedding', type: 'video' },
+        { title: 'Event Coverage', description: 'Special moments compilation', category: 'events', type: 'video' }
+    ];
+    
+    displayPortfolioImages(defaultImages);
+    displayPortfolioVideos(defaultVideos);
+}
+
+// ===== IMAGE FULL VIEW MODAL SYSTEM =====
+function initPortfolioModal() {
+    const portfolioItems = document.querySelectorAll('.portfolio-item');
+    
+    portfolioItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const imageSrc = this.querySelector('.portfolio-img').src;
+            const title = this.querySelector('h3')?.textContent || 'Portfolio Image';
+            const description = this.querySelector('p')?.textContent || '';
+            const category = this.querySelector('small')?.textContent || '';
+            
+            showImageModal(imageSrc, title, description, category);
+        });
+    });
+}
+
+// Show image modal
+function showImageModal(imageSrc, title, description, category) {
+    // Remove existing modal first
+    const existingModal = document.querySelector('.image-modal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Create modal
+    const modal = document.createElement('div');
+    modal.className = 'image-modal active';
+    
+    modal.innerHTML = `
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeImageModal()">
+                <i class="fas fa-times"></i>
+            </button>
+            <img src="${imageSrc}" alt="${title}" class="modal-image" 
+                 onerror="this.src='https://picsum.photos/600/800?random=1'">
+            <div class="modal-info">
+                <h3>${title}</h3>
+                ${description ? `<p>${description}</p>` : ''}
+                <small>${category}</small>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Close modal when clicking outside
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeImageModal();
+        }
+    });
+    
+    // Close with Escape key
+    const closeWithEscape = function(e) {
+        if (e.key === 'Escape') {
+            closeImageModal();
+            document.removeEventListener('keydown', closeWithEscape);
+        }
+    };
+    document.addEventListener('keydown', closeWithEscape);
+    
+    // Prevent body scroll when modal is open
+    document.body.style.overflow = 'hidden';
+}
+
+// Close image modal
+function closeImageModal() {
+    const modal = document.querySelector('.image-modal');
+    if (modal) {
+        modal.style.animation = 'fadeOut 0.3s ease';
+        setTimeout(() => {
+            modal.remove();
+            // Restore body scroll
+            document.body.style.overflow = '';
+        }, 300);
+    }
+}
+
+// Video play function
+function playVideo(videoUrl, platform, videoTitle = 'Video') {
+    // Redirect to portfolio page for videos or open in modal
+    window.location.href = 'portfolio/portfolio.html#videos';
+}
+
+// Initialize portfolio animations
 function initPortfolioAnimations() {
     const portfolioItems = document.querySelectorAll('.portfolio-item');
-    const portfolioObserver = new IntersectionObserver((entries) => {
+    const observer = new IntersectionObserver((entries) => {
         entries.forEach((entry, index) => {
             if (entry.isIntersecting) {
                 setTimeout(() => {
@@ -359,9 +468,34 @@ function initPortfolioAnimations() {
 
     portfolioItems.forEach(item => {
         item.style.opacity = '0';
-        item.style.transform = 'scale(0.8)';
+        item.style.transform = 'scale(0.9)';
         item.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
-        portfolioObserver.observe(item);
+        observer.observe(item);
+    });
+}
+
+// Initialize video animations
+function initVideoAnimations() {
+    const videoItems = document.querySelectorAll('.video-item');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry, index) => {
+            if (entry.isIntersecting) {
+                setTimeout(() => {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'scale(1)';
+                }, index * 150);
+            }
+        });
+    }, {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    });
+
+    videoItems.forEach(item => {
+        item.style.opacity = '0';
+        item.style.transform = 'scale(0.9)';
+        item.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+        observer.observe(item);
     });
 }
 
@@ -690,3 +824,9 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     });
 });
+
+// Make functions globally available
+window.closeImageModal = closeImageModal;
+window.openWhatsApp = openWhatsApp;
+window.scrollToBooking = scrollToBooking;
+window.handleImageError = handleImageError;
