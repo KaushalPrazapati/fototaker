@@ -1,4 +1,4 @@
-// Portfolio Page JavaScript - COMPLETELY FIXED WITH PLATFORM-BASED VIDEO DISPLAY
+// Portfolio Page JavaScript - COMPLETELY FIXED WITH VIDEO MODAL
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Portfolio page loaded');
     
@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initNavigation();
     initPortfolioFilters();
     initPortfolioLoading();
-    loadVideosForPortfolio(); // ✅ Videos load karo
+    loadVideosForPortfolio();
     
     // Make body visible
     document.body.classList.add('loaded');
@@ -261,7 +261,7 @@ function showDefaultPortfolio() {
     displayPortfolioPage();
 }
 
-// ==================== VIDEOS SECTION - PLATFORM BASED DISPLAY ====================
+// ==================== VIDEOS SECTION - FIXED MODAL ====================
 
 // Videos Loading for Portfolio Page
 async function loadVideosForPortfolio() {
@@ -296,14 +296,13 @@ async function loadVideosForPortfolio() {
             // Platform-based styling
             const isReel = video.platform === 'instagram' || video.platform === 'reels';
             const videoClass = isReel ? 'video-card reel-video' : 'video-card youtube-video';
-            const aspectRatio = isReel ? 'aspect-ratio-9-16' : 'aspect-ratio-16-9';
             
             return `
                 <div class="${videoClass}">
-                    <div class="video-thumbnail ${aspectRatio}">
+                    <div class="video-thumbnail">
                         <img src="${video.thumbnail}" alt="${video.title}" 
                              onerror="this.src='https://picsum.photos/${isReel ? '300/500' : '400/300'}?random=1'">
-                        <button class="video-play-btn" onclick="playVideo('${video.url}', '${video.platform}')">
+                        <button class="video-play-btn" onclick="playVideo('${video.url}', '${video.platform}', '${video.title || 'Video'}')">
                             <i class="fas fa-play"></i>
                         </button>
                         <div class="video-platform-badge ${video.platform}">
@@ -332,57 +331,142 @@ async function loadVideosForPortfolio() {
     }
 }
 
-// Video Play Function - Platform based modal
-function playVideo(videoUrl, platform) {
+// Video Play Function - FIXED MODAL
+function playVideo(videoUrl, platform, videoTitle = 'Video') {
+    console.log('Playing video:', videoUrl, platform, videoTitle);
+    
+    // Remove any existing modal first
+    const existingModal = document.querySelector('.video-modal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
     // Create modal
     const modal = document.createElement('div');
     modal.className = 'video-modal';
-    modal.style.display = 'flex';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        padding: 20px;
+        animation: fadeIn 0.3s ease;
+    `;
     
     const isReel = platform === 'instagram' || platform === 'reels';
     
     // Convert URLs to embed format
     let embedUrl = videoUrl;
-    let modalClass = isReel ? 'reel-modal' : 'youtube-modal';
     
     // YouTube URL conversion
     if (videoUrl.includes('youtube.com/watch?v=')) {
         const videoId = videoUrl.split('v=')[1]?.split('&')[0];
-        embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+        embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&showinfo=0`;
     } else if (videoUrl.includes('youtu.be/')) {
         const videoId = videoUrl.split('youtu.be/')[1];
-        embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
-    }
-    // Instagram Reel URL
-    else if (videoUrl.includes('instagram.com/p/') || videoUrl.includes('instagram.com/reel/')) {
-        embedUrl = videoUrl;
-        modalClass = 'reel-modal';
+        embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&showinfo=0`;
     }
     
+    // Determine modal size based on platform
+    const modalWidth = isReel ? '400px' : '800px';
+    const modalHeight = isReel ? '700px' : '500px';
+    
     modal.innerHTML = `
-        <div class="video-modal-content ${modalClass}">
-            <button class="close-modal" onclick="this.parentElement.parentElement.remove()">
+        <div class="video-modal-content" style="
+            position: relative;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            width: ${modalWidth};
+            max-width: 95vw;
+            height: ${modalHeight};
+            max-height: 90vh;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            animation: scaleIn 0.3s ease;
+        ">
+            <!-- Close Button -->
+            <button class="close-modal" onclick="closeVideoModal()" style="
+                position: absolute;
+                top: 15px;
+                right: 15px;
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                z-index: 10;
+                font-size: 1.2rem;
+                transition: all 0.3s ease;
+            ">
                 <i class="fas fa-times"></i>
             </button>
-            <div class="modal-header">
-                <h3>${isReel ? 'Instagram Reel' : 'YouTube Video'}</h3>
+            
+            <!-- Modal Header -->
+            <div class="modal-header" style="
+                padding: 1.5rem;
+                background: #f8f9fa;
+                border-bottom: 1px solid #e9ecef;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            ">
+                <i class="fab fa-${isReel ? 'instagram' : 'youtube'}" 
+                   style="color: ${isReel ? '#E4405F' : '#FF0000'}; 
+                          font-size: 1.5rem;"></i>
+                <h3 style="margin: 0; color: #333; font-size: 1.3rem; font-weight: 600;">
+                    ${videoTitle}
+                </h3>
             </div>
-            <div class="modal-video-container">
-                ${
-                    embedUrl.includes('youtube.com/embed') 
-                    ? `<iframe src="${embedUrl}" 
-                              frameborder="0" 
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                              allowfullscreen>
-                       </iframe>`
-                    : `<div class="external-video-link">
-                          <div class="video-placeholder">
-                              <i class="fab fa-${isReel ? 'instagram' : 'video'}"></i>
-                              <p>This ${isReel ? 'Instagram Reel' : 'video'} cannot be embedded here.</p>
-                              <a href="${videoUrl}" target="_blank" class="btn btn-primary">
-                                  <i class="fas fa-external-link-alt"></i> Watch on ${isReel ? 'Instagram' : 'Original Platform'}
-                              </a>
-                          </div>
+            
+            <!-- Video Content -->
+            <div class="modal-video-container" style="height: calc(100% - 80px);">
+                ${embedUrl.includes('youtube.com/embed') 
+                    ? `<div style="width: 100%; height: 100%;">
+                         <iframe 
+                             src="${embedUrl}" 
+                             style="width: 100%; height: 100%; border: none;"
+                             frameborder="0" 
+                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                             allowfullscreen>
+                         </iframe>
+                       </div>`
+                    : `<div style="padding: 3rem 2rem; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                          <i class="fab fa-${isReel ? 'instagram' : 'video'}" 
+                             style="font-size: 4rem; color: #ddd; margin-bottom: 1.5rem;"></i>
+                          <h4 style="color: #666; margin-bottom: 1rem; font-size: 1.2rem;">
+                              ${isReel ? 'Instagram Reel' : 'Video'} Preview
+                          </h4>
+                          <p style="color: #888; margin-bottom: 2rem; line-height: 1.5;">
+                              This content cannot be embedded here. Click the button below to watch it on ${isReel ? 'Instagram' : 'the original platform'}.
+                          </p>
+                          <a href="${videoUrl}" target="_blank" style="
+                              display: inline-flex;
+                              align-items: center;
+                              gap: 10px;
+                              padding: 12px 30px;
+                              background: var(--primary-color);
+                              color: white;
+                              text-decoration: none;
+                              border-radius: 25px;
+                              font-weight: 600;
+                              font-size: 1rem;
+                              transition: all 0.3s ease;
+                          " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(99, 102, 241, 0.3)';"
+                          onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                              <i class="fas fa-external-link-alt"></i> 
+                              Watch on ${isReel ? 'Instagram' : 'YouTube'}
+                          </a>
                        </div>`
                 }
             </div>
@@ -391,21 +475,59 @@ function playVideo(videoUrl, platform) {
     
     document.body.appendChild(modal);
     
+    // Add modal styles if not exists
+    if (!document.querySelector('#modal-styles')) {
+        const styles = document.createElement('style');
+        styles.id = 'modal-styles';
+        styles.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes scaleIn {
+                from { 
+                    opacity: 0;
+                    transform: scale(0.8) translateY(-20px);
+                }
+                to { 
+                    opacity: 1;
+                    transform: scale(1) translateY(0);
+                }
+            }
+            .close-modal:hover {
+                background: rgba(0, 0, 0, 1) !important;
+                transform: scale(1.1);
+            }
+        `;
+        document.head.appendChild(styles);
+    }
+    
     // Close modal when clicking outside
     modal.addEventListener('click', function(e) {
         if (e.target === modal) {
-            modal.remove();
+            closeVideoModal();
         }
     });
     
     // Close with Escape key
     const closeWithEscape = function(e) {
         if (e.key === 'Escape') {
-            modal.remove();
+            closeVideoModal();
             document.removeEventListener('keydown', closeWithEscape);
         }
     };
     document.addEventListener('keydown', closeWithEscape);
+}
+
+// Close video modal function
+function closeVideoModal() {
+    const modal = document.querySelector('.video-modal');
+    if (modal) {
+        modal.style.animation = 'fadeOut 0.3s ease';
+        setTimeout(() => {
+            modal.remove();
+        }, 300);
+    }
 }
 
 // Initialize video animations
@@ -664,5 +786,6 @@ document.addEventListener('DOMContentLoaded', function() {
 // Make functions globally available
 window.loadMorePortfolio = loadMorePortfolio;
 window.playVideo = playVideo;
+window.closeVideoModal = closeVideoModal;
 window.openWhatsApp = openWhatsApp;
 window.handleImageError = handleImageError;
