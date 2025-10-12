@@ -1,4 +1,4 @@
-// Portfolio Page JavaScript - COMPLETELY FIXED WITH VIDEO MODAL
+// Portfolio Page JavaScript - WITH IMAGE VIEWER
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Portfolio page loaded');
     
@@ -21,6 +21,10 @@ const portfolioPerPage = 12;
 let allPortfolioItems = [];
 let filteredPortfolioItems = [];
 let currentFilter = 'all';
+
+// Image Viewer State
+let currentImageIndex = 0;
+let currentFilteredItems = [];
 
 // Initialize portfolio filters
 function initPortfolioFilters() {
@@ -53,6 +57,9 @@ function filterPortfolioItems(filter) {
     // Reset pagination
     currentPortfolioPage = 0;
     
+    // Update current filtered items for image viewer
+    currentFilteredItems = filteredPortfolioItems.filter(item => item.type !== 'video');
+    
     // Display filtered items
     displayPortfolioPage();
 }
@@ -62,6 +69,7 @@ async function initPortfolioLoading() {
     try {
         await loadAllPortfolioItems();
         initPortfolioAnimations();
+        initPortfolioImageModal(); // Initialize image modal
         setupLoadMore();
     } catch (error) {
         console.error('Error loading portfolio:', error);
@@ -89,6 +97,7 @@ async function loadAllPortfolioItems() {
             const data = doc.data();
             portfolioData.push({
                 id: doc.id,
+                type: 'image',
                 ...data
             });
         });
@@ -98,6 +107,7 @@ async function loadAllPortfolioItems() {
         if (portfolioData.length > 0) {
             allPortfolioItems = portfolioData;
             filteredPortfolioItems = [...portfolioData];
+            currentFilteredItems = [...portfolioData]; // For image viewer
             displayPortfolioPage();
         } else {
             // Fallback to localStorage (admin panel data)
@@ -115,8 +125,9 @@ function loadPortfolioFromLocalStorage() {
     const portfolioData = JSON.parse(localStorage.getItem('portfolioData')) || [];
     
     if (portfolioData.length > 0) {
-        allPortfolioItems = portfolioData;
-        filteredPortfolioItems = [...portfolioData];
+        allPortfolioItems = portfolioData.map(item => ({ ...item, type: 'image' }));
+        filteredPortfolioItems = [...allPortfolioItems];
+        currentFilteredItems = [...allPortfolioItems]; // For image viewer
         displayPortfolioPage();
     } else {
         // Final fallback - default portfolio
@@ -146,8 +157,8 @@ function displayPortfolioPage() {
         return;
     }
     
-    portfolioGrid.innerHTML = itemsToShow.map(item => `
-        <div class="portfolio-item-full" data-categories="${item.category || 'all'}">
+    portfolioGrid.innerHTML = itemsToShow.map((item, index) => `
+        <div class="portfolio-item-full" data-categories="${item.category || 'all'}" data-index="${index}">
             <img src="${item.image || 'https://picsum.photos/400/600?random=' + Math.floor(Math.random() * 100)}" 
                  alt="${item.title || 'Portfolio Image'}" 
                  onerror="handleImageError(this)">
@@ -178,6 +189,146 @@ function displayPortfolioPage() {
     initPortfolioAnimations();
 }
 
+// ===== PORTFOLIO IMAGE VIEWER MODAL =====
+function initPortfolioImageModal() {
+    const portfolioItems = document.querySelectorAll('.portfolio-item-full');
+    
+    portfolioItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const index = parseInt(this.getAttribute('data-index'));
+            const imageSrc = this.querySelector('img').src;
+            const title = this.querySelector('h3')?.textContent || 'Portfolio Image';
+            const description = this.querySelector('p')?.textContent || '';
+            const category = this.querySelector('small')?.textContent || '';
+            
+            // Set current image index
+            currentImageIndex = index;
+            
+            // Show image modal
+            showPortfolioImageModal(imageSrc, title, description, category, index);
+        });
+    });
+}
+
+// Show portfolio image modal
+function showPortfolioImageModal(imageSrc, title, description, category, index) {
+    // Remove existing modal first
+    const existingModal = document.querySelector('.portfolio-modal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Get current filtered items (only images)
+    const currentImages = currentFilteredItems.filter(item => item.type !== 'video');
+    
+    // Create modal
+    const modal = document.createElement('div');
+    modal.className = 'portfolio-modal active';
+    
+    modal.innerHTML = `
+        <div class="portfolio-modal-content">
+            <button class="portfolio-modal-close" onclick="closePortfolioImageModal()">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            ${currentImages.length > 1 ? `
+                <button class="portfolio-modal-nav portfolio-modal-prev" onclick="navigatePortfolioImage(-1)">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="portfolio-modal-nav portfolio-modal-next" onclick="navigatePortfolioImage(1)">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                <div class="portfolio-modal-counter">
+                    ${index + 1} / ${currentImages.length}
+                </div>
+            ` : ''}
+            
+            <img src="${imageSrc}" alt="${title}" class="portfolio-modal-image" 
+                 onerror="this.src='https://picsum.photos/600/800?random=1'">
+            
+            <div class="portfolio-modal-info">
+                <h3>${title}</h3>
+                ${description ? `<p>${description}</p>` : ''}
+                <small>${category}</small>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Close modal when clicking outside
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closePortfolioImageModal();
+        }
+    });
+    
+    // Keyboard navigation
+    const handleKeydown = function(e) {
+        if (e.key === 'Escape') {
+            closePortfolioImageModal();
+        } else if (e.key === 'ArrowLeft') {
+            navigatePortfolioImage(-1);
+        } else if (e.key === 'ArrowRight') {
+            navigatePortfolioImage(1);
+        }
+    };
+    document.addEventListener('keydown', handleKeydown);
+    
+    // Store the event listener for cleanup
+    modal._keydownHandler = handleKeydown;
+    
+    // Prevent body scroll when modal is open
+    document.body.style.overflow = 'hidden';
+}
+
+// Close portfolio image modal
+function closePortfolioImageModal() {
+    const modal = document.querySelector('.portfolio-modal');
+    if (modal) {
+        // Remove keyboard event listener
+        if (modal._keydownHandler) {
+            document.removeEventListener('keydown', modal._keydownHandler);
+        }
+        
+        modal.style.animation = 'fadeOut 0.3s ease';
+        setTimeout(() => {
+            modal.remove();
+            // Restore body scroll
+            document.body.style.overflow = '';
+        }, 300);
+    }
+}
+
+// Navigate between portfolio images
+function navigatePortfolioImage(direction) {
+    const currentImages = currentFilteredItems.filter(item => item.type !== 'video');
+    
+    if (currentImages.length <= 1) return;
+    
+    currentImageIndex += direction;
+    
+    // Handle wrap-around
+    if (currentImageIndex < 0) {
+        currentImageIndex = currentImages.length - 1;
+    } else if (currentImageIndex >= currentImages.length) {
+        currentImageIndex = 0;
+    }
+    
+    const nextImage = currentImages[currentImageIndex];
+    if (!nextImage) return;
+    
+    const imageSrc = nextImage.image || 'https://picsum.photos/600/800?random=1';
+    const title = nextImage.title || 'Portfolio Image';
+    const description = nextImage.description || '';
+    const category = getCategoryDisplayName(nextImage.category);
+    
+    // Update modal with new image
+    showPortfolioImageModal(imageSrc, title, description, category, currentImageIndex);
+}
+
 // Load more portfolio items
 async function loadMorePortfolio() {
     const loadMoreBtn = document.getElementById('loadMoreBtn');
@@ -196,6 +347,9 @@ async function loadMorePortfolio() {
         
         currentPortfolioPage++;
         displayPortfolioPage();
+        
+        // Re-initialize modal for new items
+        initPortfolioImageModal();
         
     } catch (error) {
         console.error('Error loading more portfolio items:', error);
@@ -239,29 +393,7 @@ function initPortfolioAnimations() {
     });
 }
 
-// Show default portfolio (fallback)
-function showDefaultPortfolio() {
-    const defaultItems = [
-        { category: 'wedding', title: 'Beautiful Wedding Ceremony', description: 'Traditional wedding moments', image: 'https://picsum.photos/400/600?random=1' },
-        { category: 'pre-wedding', title: 'Romantic Pre-Wedding', description: 'Couple photoshoot in nature', image: 'https://picsum.photos/400/600?random=2' },
-        { category: 'portrait', title: 'Professional Portrait', description: 'Studio portrait session', image: 'https://picsum.photos/400/600?random=3' },
-        { category: 'events', title: 'Corporate Event', description: 'Business conference coverage', image: 'https://picsum.photos/400/600?random=4' },
-        { category: 'wedding', title: 'Candid Wedding Moments', description: 'Natural and emotional shots', image: 'https://picsum.photos/400/600?random=5' },
-        { category: 'pre-wedding', title: 'Urban Couple Shoot', description: 'Cityscape photography', image: 'https://picsum.photos/400/600?random=6' },
-        { category: 'portrait', title: 'Family Portrait', description: 'Multi-generational family photos', image: 'https://picsum.photos/400/600?random=7' },
-        { category: 'events', title: 'Birthday Celebration', description: 'Special birthday event', image: 'https://picsum.photos/400/600?random=8' },
-        { category: 'wedding', title: 'Traditional Ceremony', description: 'Cultural wedding traditions', image: 'https://picsum.photos/400/600?random=9' },
-        { category: 'pre-wedding', title: 'Beach Shoot', description: 'Sunset couple photos', image: 'https://picsum.photos/400/600?random=10' },
-        { category: 'portrait', title: 'Maternity Shoot', description: 'Pregnancy photography', image: 'https://picsum.photos/400/600?random=11' },
-        { category: 'events', title: 'Anniversary Party', description: '25 years celebration', image: 'https://picsum.photos/400/600?random=12' }
-    ];
-    
-    allPortfolioItems = defaultItems;
-    filteredPortfolioItems = [...defaultItems];
-    displayPortfolioPage();
-}
-
-// ==================== VIDEOS SECTION - FIXED MODAL ====================
+// ==================== VIDEOS SECTION ====================
 
 // Videos Loading for Portfolio Page
 async function loadVideosForPortfolio() {
@@ -331,7 +463,30 @@ async function loadVideosForPortfolio() {
     }
 }
 
-// Video Play Function - FIXED MODAL
+// Show default portfolio (fallback)
+function showDefaultPortfolio() {
+    const defaultItems = [
+        { category: 'wedding', title: 'Beautiful Wedding Ceremony', description: 'Traditional wedding moments', image: 'https://picsum.photos/400/600?random=1' },
+        { category: 'pre-wedding', title: 'Romantic Pre-Wedding', description: 'Couple photoshoot in nature', image: 'https://picsum.photos/400/600?random=2' },
+        { category: 'portrait', title: 'Professional Portrait', description: 'Studio portrait session', image: 'https://picsum.photos/400/600?random=3' },
+        { category: 'events', title: 'Corporate Event', description: 'Business conference coverage', image: 'https://picsum.photos/400/600?random=4' },
+        { category: 'wedding', title: 'Candid Wedding Moments', description: 'Natural and emotional shots', image: 'https://picsum.photos/400/600?random=5' },
+        { category: 'pre-wedding', title: 'Urban Couple Shoot', description: 'Cityscape photography', image: 'https://picsum.photos/400/600?random=6' },
+        { category: 'portrait', title: 'Family Portrait', description: 'Multi-generational family photos', image: 'https://picsum.photos/400/600?random=7' },
+        { category: 'events', title: 'Birthday Celebration', description: 'Special birthday event', image: 'https://picsum.photos/400/600?random=8' },
+        { category: 'wedding', title: 'Traditional Ceremony', description: 'Cultural wedding traditions', image: 'https://picsum.photos/400/600?random=9' },
+        { category: 'pre-wedding', title: 'Beach Shoot', description: 'Sunset couple photos', image: 'https://picsum.photos/400/600?random=10' },
+        { category: 'portrait', title: 'Maternity Shoot', description: 'Pregnancy photography', image: 'https://picsum.photos/400/600?random=11' },
+        { category: 'events', title: 'Anniversary Party', description: '25 years celebration', image: 'https://picsum.photos/400/600?random=12' }
+    ];
+    
+    allPortfolioItems = defaultItems;
+    filteredPortfolioItems = [...defaultItems];
+    currentFilteredItems = [...defaultItems];
+    displayPortfolioPage();
+}
+
+// Video Play Function
 function playVideo(videoUrl, platform, videoTitle = 'Video') {
     console.log('Playing video:', videoUrl, platform, videoTitle);
     
@@ -474,33 +629,6 @@ function playVideo(videoUrl, platform, videoTitle = 'Video') {
     `;
     
     document.body.appendChild(modal);
-    
-    // Add modal styles if not exists
-    if (!document.querySelector('#modal-styles')) {
-        const styles = document.createElement('style');
-        styles.id = 'modal-styles';
-        styles.textContent = `
-            @keyframes fadeIn {
-                from { opacity: 0; }
-                to { opacity: 1; }
-            }
-            @keyframes scaleIn {
-                from { 
-                    opacity: 0;
-                    transform: scale(0.8) translateY(-20px);
-                }
-                to { 
-                    opacity: 1;
-                    transform: scale(1) translateY(0);
-                }
-            }
-            .close-modal:hover {
-                background: rgba(0, 0, 0, 1) !important;
-                transform: scale(1.1);
-            }
-        `;
-        document.head.appendChild(styles);
-    }
     
     // Close modal when clicking outside
     modal.addEventListener('click', function(e) {
@@ -789,3 +917,5 @@ window.playVideo = playVideo;
 window.closeVideoModal = closeVideoModal;
 window.openWhatsApp = openWhatsApp;
 window.handleImageError = handleImageError;
+window.closePortfolioImageModal = closePortfolioImageModal;
+window.navigatePortfolioImage = navigatePortfolioImage;
