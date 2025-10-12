@@ -393,15 +393,26 @@ section {
     font-weight: 300;
 }
 
-/* Portfolio Section */
+/* ===== PORTFOLIO SECTION - DESKTOP 3 COLUMNS, SEPARATE SECTIONS ===== */
 .portfolio {
     background: var(--bg-secondary);
+    padding: 80px 0;
+}
+
+/* Images Section */
+.portfolio-images {
+    margin-bottom: 4rem;
+}
+
+.portfolio-images .section-title {
+    margin-bottom: 3rem;
 }
 
 .portfolio-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 1.5rem;
+    margin-bottom: 2rem;
 }
 
 .portfolio-item {
@@ -412,7 +423,9 @@ section {
     transition: all 0.4s ease;
     aspect-ratio: 3/4;
     opacity: 0;
-    transform: scale(0.8);
+    transform: scale(0.9);
+    background: var(--card-bg);
+    cursor: pointer;
 }
 
 .portfolio-img {
@@ -442,18 +455,116 @@ section {
     transform: translateY(-8px) scale(1.02);
 }
 
-.loading {
-    text-align: center;
-    padding: 3rem;
-    color: var(--text-light);
-    font-size: 1.1rem;
-    grid-column: 1 / -1;
+.portfolio-item:hover .portfolio-img {
+    transform: scale(1.1);
+}
+
+/* Videos Section */
+.portfolio-videos {
+    margin-top: 4rem;
+}
+
+.portfolio-videos .section-title {
+    margin-bottom: 3rem;
+}
+
+.videos-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+.video-item {
+    position: relative;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: all 0.4s ease;
+    aspect-ratio: 16/9;
+    background: var(--card-bg);
+    cursor: pointer;
+}
+
+.video-thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.video-play-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2;
+    transition: all 0.3s ease;
+}
+
+.video-play-icon:hover {
+    background: white;
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+.video-play-icon i {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    margin-left: 3px;
+}
+
+.video-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 0, 0, 0.9);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    z-index: 2;
+}
+
+.video-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+    color: white;
+    padding: 1.5rem;
+    transform: translateY(100%);
+    transition: transform 0.4s ease;
+}
+
+.video-item:hover .video-overlay {
+    transform: translateY(0);
+}
+
+.video-item:hover {
+    transform: translateY(-8px) scale(1.02);
+}
+
+.video-item:hover .video-thumbnail {
+    transform: scale(1.1);
 }
 
 /* Portfolio CTA Section */
 .portfolio-cta {
     text-align: center;
-    margin-top: 3rem;
+    margin-top: 4rem;
     padding: 2rem;
 }
 
@@ -468,6 +579,282 @@ section {
 .portfolio-cta .btn-large:hover {
     transform: translateY(-5px);
     box-shadow: 0 15px 40px rgba(99, 102, 241, 0.4);
+}
+
+/* ===== IMAGE FULL VIEW MODAL ===== */
+.image-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 20px;
+    animation: fadeIn 0.3s ease;
+}
+
+.image-modal.active {
+    display: flex;
+}
+
+.modal-content {
+    position: relative;
+    max-width: 95%;
+    max-height: 95%;
+    border-radius: 15px;
+    overflow: hidden;
+    background: var(--card-bg);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+    animation: scaleIn 0.3s ease;
+}
+
+.modal-image {
+    width: 100%;
+    height: auto;
+    max-height: 80vh;
+    object-fit: contain;
+    display: block;
+}
+
+.modal-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+}
+
+.modal-close:hover {
+    background: rgba(0, 0, 0, 1);
+    transform: scale(1.1);
+}
+
+.modal-info {
+    padding: 1.5rem;
+    background: var(--card-bg);
+    color: var(--text-dark);
+}
+
+.modal-info h3 {
+    margin-bottom: 0.5rem;
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+}
+
+.modal-info p {
+    color: var(--text-light);
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.modal-info small {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* Modal Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+    from { 
+        opacity: 0;
+        transform: scale(0.8) translateY(-20px);
+    }
+    to { 
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+/* Loading State */
+.loading {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-light);
+    font-size: 1.1rem;
+    grid-column: 1 / -1;
+}
+
+/* ===== MOBILE RESPONSIVE FIXES ===== */
+@media (max-width: 768px) {
+    .portfolio {
+        padding: 60px 0;
+    }
+    
+    /* MOBILE: 2 COLUMNS FOR BOTH SECTIONS */
+    .portfolio-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.8rem;
+    }
+    
+    .videos-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.8rem;
+    }
+    
+    .portfolio-item, .video-item {
+        margin: 0.2rem 0;
+        border-radius: 12px;
+    }
+    
+    .portfolio-overlay, .video-overlay {
+        padding: 1rem;
+    }
+    
+    .portfolio-overlay h3, .video-overlay h3 {
+        font-size: 0.9rem;
+        margin-bottom: 0.3rem;
+    }
+    
+    .portfolio-overlay p, .video-overlay p {
+        font-size: 0.75rem;
+        display: none; /* Hide description on mobile to save space */
+    }
+    
+    .portfolio-overlay small, .video-overlay small {
+        font-size: 0.7rem;
+    }
+    
+    .portfolio-images, .portfolio-videos {
+        margin-bottom: 3rem;
+    }
+    
+    .video-play-icon {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .video-play-icon i {
+        font-size: 1.2rem;
+    }
+    
+    .video-badge {
+        font-size: 0.65rem;
+        padding: 3px 8px;
+        top: 10px;
+        right: 10px;
+    }
+    
+    .portfolio-cta {
+        margin-top: 2rem;
+        padding: 1.5rem;
+    }
+    
+    .portfolio-cta .btn-large {
+        padding: 14px 35px;
+        font-size: 1.1rem;
+        width: 100%;
+        max-width: 280px;
+    }
+    
+    /* Modal adjustments for mobile */
+    .modal-content {
+        max-width: 98%;
+        max-height: 98%;
+        border-radius: 10px;
+    }
+    
+    .modal-image {
+        max-height: 70vh;
+    }
+    
+    .modal-close {
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+        top: 10px;
+        right: 10px;
+    }
+    
+    .modal-info {
+        padding: 1rem;
+    }
+    
+    .modal-info h3 {
+        font-size: 1.1rem;
+    }
+    
+    .modal-info p {
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .portfolio-grid, .videos-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.6rem;
+    }
+    
+    .portfolio-overlay, .video-overlay {
+        padding: 0.8rem;
+    }
+    
+    .portfolio-overlay h3, .video-overlay h3 {
+        font-size: 0.85rem;
+    }
+    
+    .portfolio-overlay small, .video-overlay small {
+        font-size: 0.65rem;
+    }
+    
+    .portfolio-cta .btn-large {
+        padding: 12px 30px;
+        font-size: 1rem;
+    }
+}
+
+/* Tablet View - 3 Columns */
+@media (min-width: 769px) {
+    .portfolio-grid, .videos-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+    }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .portfolio-item:hover, .video-item:hover {
+        transform: none;
+    }
+    
+    .portfolio-item:hover .portfolio-img, .video-item:hover .video-thumbnail {
+        transform: none;
+    }
+    
+    .portfolio-item:active, .video-item:active {
+        transform: scale(0.98);
+    }
+    
+    .modal-close:hover {
+        transform: none;
+    }
+    
+    .video-play-icon:hover {
+        transform: translate(-50%, -50%);
+    }
 }
 
 /* Services Section */
@@ -1068,19 +1455,19 @@ section {
     color: white !important;
 }
 
-.social-link:nth-child(2):hover {
+.social-link:nth-child(4):hover {
     color: #1877F2;
     background: #1877F2;
     color: white !important;
 }
 
-.social-link:nth-child(3):hover {
+.social-link:nth-child(2):hover {
     color: #25D366;
     background: #25D366;
     color: white !important;
 }
 
-.social-link:nth-child(4):hover {
+.social-link:nth-child(3):hover {
     color: #FF0000;
     background: #FF0000;
     color: white !important;
@@ -1211,6 +1598,14 @@ html {
     }
 }
 
+.loading {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-light);
+    font-size: 1.1rem;
+    grid-column: 1 / -1;
+}
+
 /* ===== MOBILE RESPONSIVE FIXES ===== */
 @media (max-width: 768px) {
     /* General Mobile Fixes */
@@ -1267,6 +1662,94 @@ html {
         font-size: 1rem;
         justify-content: center;
         margin: 5px 0;
+    }
+    
+    /* Portfolio Section Mobile Fix */
+    .portfolio {
+        padding: 50px 0;
+    }
+    
+    .portfolio-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.6rem;
+    }
+    
+    .portfolio-item {
+        margin: 0.2rem 0;
+        border-radius: 10px;
+    }
+    
+    .portfolio-overlay {
+        padding: 0.8rem;
+    }
+    
+    .portfolio-overlay h3 {
+        font-size: 0.9rem;
+        margin-bottom: 0.3rem;
+    }
+    
+    .portfolio-overlay p {
+        font-size: 0.75rem;
+        display: none; /* Hide description on mobile to save space */
+    }
+    
+    .portfolio-overlay small {
+        font-size: 0.7rem;
+    }
+    
+    .portfolio-cta {
+        margin-top: 1.5rem;
+        padding: 1rem;
+    }
+    
+    .portfolio-cta .btn-large {
+        padding: 12px 30px;
+        font-size: 1rem;
+    }
+    
+    /* Modal adjustments for mobile */
+    .modal-content {
+        max-width: 98%;
+        max-height: 98%;
+        border-radius: 8px;
+    }
+    
+    .modal-image {
+        max-height: 70vh;
+    }
+    
+    .modal-close {
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+        top: 10px;
+        right: 10px;
+    }
+    
+    .modal-info {
+        padding: 0.8rem;
+    }
+    
+    .modal-info h3 {
+        font-size: 1.1rem;
+    }
+    
+    .modal-info p {
+        font-size: 0.85rem;
+    }
+    
+    .video-play-icon {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .video-play-icon i {
+        font-size: 1rem;
+    }
+    
+    .video-badge {
+        font-size: 0.65rem;
+        padding: 3px 6px;
     }
     
     /* Services Section Mobile Fix */
@@ -1348,19 +1831,6 @@ html {
         gap: 0.8rem;
     }
     
-    /* Portfolio Mobile Fix */
-    .portfolio-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
-    
-    .portfolio-cta .btn-large {
-        width: 100%;
-        max-width: 300px;
-        padding: 14px 30px;
-        font-size: 1.1rem;
-    }
-    
     /* About Section Mobile Fix */
     .about-content {
         grid-template-columns: 1fr;
@@ -1437,6 +1907,28 @@ html {
         font-size: 1.8rem;
     }
     
+    .portfolio-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+    }
+    
+    .portfolio-overlay {
+        padding: 0.6rem;
+    }
+    
+    .portfolio-overlay h3 {
+        font-size: 0.85rem;
+    }
+    
+    .portfolio-overlay small {
+        font-size: 0.65rem;
+    }
+    
+    .portfolio-cta .btn-large {
+        padding: 12px 25px;
+        font-size: 0.95rem;
+    }
+    
     .service-category {
         padding: 1rem;
     }
@@ -1474,6 +1966,10 @@ html {
         outline: 2px solid var(--primary-color);
         outline-offset: 2px;
     }
+    
+    .portfolio-item:active {
+        transform: scale(0.98);
+    }
 }
 
 /* Touch Device Optimizations */
@@ -1490,11 +1986,23 @@ html {
         transform: none;
     }
     
+    .portfolio-item:hover .portfolio-img {
+        transform: none;
+    }
+    
     .box-link:hover {
         transform: none;
     }
     
     .box-theme:hover {
         transform: none;
+    }
+    
+    .modal-close:hover {
+        transform: none;
+    }
+    
+    .video-play-icon:hover {
+        transform: translate(-50%, -50%);
     }
 }
