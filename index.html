@@ -90,19 +90,47 @@
     <!-- Portfolio Section -->
     <section id="portfolio" class="portfolio">
         <div class="container">
-            <h2 class="section-title">Our Portfolio</h2>
-            <p class="section-subtitle">A glimpse of our recent work</p>
-            <div class="portfolio-grid" id="portfolioGrid">
-                <div class="loading">Loading portfolio...</div>
+            <!-- Images Section -->
+            <div class="portfolio-images">
+                <h2 class="section-title">Our Photography Work</h2>
+                <p class="section-subtitle">Explore our stunning photography portfolio</p>
+                <div class="portfolio-grid" id="portfolioGrid">
+                    <div class="loading">Loading images...</div>
+                </div>
             </div>
+
+            <!-- Videos Section -->
+            <div class="portfolio-videos">
+                <h2 class="section-title">Our Videos & Reels</h2>
+                <p class="section-subtitle">Watch our latest work in motion</p>
+                <div class="videos-grid" id="videosGrid">
+                    <div class="loading">Loading videos...</div>
+                </div>
+            </div>
+
             <!-- View More Button -->
             <div class="portfolio-cta">
-                <a href="portfolio/portfolio.html" class="btn btn-primary btn-large" onclick="loadMorePortfolio()">
-                    <i class="fas fa-images"></i> Load More Portfolio
+                <a href="portfolio/portfolio.html" class="btn btn-primary btn-large">
+                    <i class="fas fa-images"></i> View Complete Portfolio
                 </a>
             </div>
         </div>
     </section>
+
+    <!-- Full Screen Image Viewer -->
+    <div id="fullscreenViewer" class="fullscreen-viewer">
+        <button class="close-viewer">
+            <i class="fas fa-times"></i>
+        </button>
+        <button class="nav-button prev-button">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="nav-button next-button">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+        <img id="fullscreenImage" class="fullscreen-image" src="" alt="">
+        <div class="image-counter"></div>
+    </div>
 
     <!-- Services Section -->
     <section id="services" class="services">
@@ -602,7 +630,6 @@
     <script src="script.js"></script>
 </body>
 </html>
-
 
 
 
