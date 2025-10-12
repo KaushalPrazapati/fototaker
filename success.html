@@ -22,6 +22,14 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
+            animation: gradientShift 8s ease infinite;
+            background-size: 200% 200%;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
         
         .success-container {
@@ -32,12 +40,37 @@
             text-align: center;
             max-width: 500px;
             width: 100%;
+            animation: slideUp 0.6s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .success-icon {
             font-size: 4rem;
             color: #27ae60;
             margin-bottom: 20px;
+            animation: bounce 1s ease;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
         }
         
         .success-title {
@@ -45,6 +78,10 @@
             font-size: 2.2rem;
             margin-bottom: 15px;
             color: #1f2937;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         
         .success-message {
@@ -60,19 +97,21 @@
             border-radius: 10px;
             margin-bottom: 30px;
             text-align: left;
+            border-left: 4px solid #6366f1;
         }
         
         .detail-item {
             display: flex;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             font-size: 0.95rem;
         }
         
         .detail-item i {
             color: #6366f1;
-            margin-right: 10px;
+            margin-right: 12px;
             width: 20px;
+            text-align: center;
         }
         
         .btn-group {
@@ -80,6 +119,7 @@
             gap: 15px;
             justify-content: center;
             flex-wrap: wrap;
+            margin-bottom: 20px;
         }
         
         .btn {
@@ -99,6 +139,7 @@
         .btn-primary {
             background: linear-gradient(135deg, #6366f1, #8b5cf6);
             color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
         }
         
         .btn-secondary {
@@ -109,15 +150,38 @@
         
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5a5feb, #7c4df5);
+        }
+        
+        .btn-secondary:hover {
+            background: #6366f1;
+            color: white;
         }
         
         .whatsapp-btn {
             background: #25D366;
             color: white;
-            margin-top: 15px;
             width: 100%;
             justify-content: center;
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+        }
+        
+        .whatsapp-btn:hover {
+            background: #128C7E;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(37, 211, 102, 0.4);
+        }
+        
+        .footer-note {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            color: #9ca3af;
+            font-size: 0.85rem;
         }
         
         @media (max-width: 480px) {
@@ -136,6 +200,39 @@
             .btn {
                 width: 100%;
                 justify-content: center;
+            }
+            
+            .success-icon {
+                font-size: 3.5rem;
+            }
+        }
+
+        /* Loading animation */
+        .loading-dots {
+            display: inline-flex;
+            gap: 4px;
+            margin-left: 8px;
+        }
+        
+        .loading-dots span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 1.4s ease-in-out infinite both;
+        }
+        
+        .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes pulse {
+            0%, 80%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
             }
         }
     </style>
@@ -159,6 +256,10 @@
         
         <div class="success-details">
             <div class="detail-item">
+                <i class="fas fa-check-circle" style="color: #27ae60;"></i>
+                <span><strong>Status:</strong> Message Received Successfully</span>
+            </div>
+            <div class="detail-item">
                 <i class="fas fa-clock"></i>
                 <span><strong>Response Time:</strong> Within 2 hours</span>
             </div>
@@ -168,13 +269,17 @@
             </div>
             <div class="detail-item">
                 <i class="fas fa-phone"></i>
-                <span><strong>Phone:</strong> 9471640485 / 7463937610</span>
+                <span><strong>Phone Numbers:</strong> 9471640485 / 7463937610</span>
+            </div>
+            <div class="detail-item">
+                <i class="fas fa-shield-alt"></i>
+                <span><strong>Secure:</strong> Your information is protected</span>
             </div>
         </div>
         
         <div class="btn-group">
             <a href="https://fototaker.netlify.app" class="btn btn-primary">
-                <i class="fas fa-home"></i> Back to Home
+                <i class="fas fa-home"></i> Back to Homepage
             </a>
             
             <a href="https://fototaker.netlify.app#contact" class="btn btn-secondary">
@@ -185,6 +290,74 @@
         <a href="https://wa.me/919471640485" target="_blank" class="btn whatsapp-btn">
             <i class="fab fa-whatsapp"></i> Message on WhatsApp
         </a>
+        
+        <div class="footer-note">
+            <p>📍 Serving entire city and surrounding areas</p>
+            <p>📸 Professional Photography & Videography Services</p>
+        </div>
     </div>
+
+    <script>
+        // Auto redirect to home after 30 seconds
+        setTimeout(() => {
+            // Only redirect if user is still on this page
+            if (window.location.href.includes('success.html')) {
+                window.location.href = 'https://fototaker.netlify.app';
+            }
+        }, 30000);
+        
+        // Add loading animation to buttons on click
+        document.querySelectorAll('.btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+                
+                // Reset after 2 seconds if still on same page
+                setTimeout(() => {
+                    if (this.innerHTML.includes('Loading')) {
+                        this.innerHTML = originalText;
+                    }
+                }, 2000);
+            });
+        });
+        
+        // Confetti effect (optional - for celebration)
+        function createConfetti() {
+            const colors = ['#6366f1', '#8b5cf6', '#f59e0b', '#ec4899', '#10b981'];
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.style.cssText = `
+                        position: fixed;
+                        width: 8px;
+                        height: 8px;
+                        background: ${colors[Math.floor(Math.random() * colors.length)]};
+                        border-radius: 50%;
+                        top: -10px;
+                        left: ${Math.random() * 100}vw;
+                        animation: fall linear forwards;
+                        z-index: 1000;
+                    `;
+                    
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        @keyframes fall {
+                            to {
+                                transform: translateY(100vh) rotate(${Math.random() * 360}deg);
+                                opacity: 0;
+                            }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                    document.body.appendChild(confetti);
+                    
+                    setTimeout(() => confetti.remove(), 2000);
+                }, i * 100);
+            }
+        }
+        
+        // Trigger confetti on page load
+        window.addEventListener('load', createConfetti);
+    </script>
 </body>
 </html>
