@@ -490,9 +490,9 @@
                     </div>
                 </div>
                 
-                <!-- ✅ FORMSUBMIT WORKING FORM - WITHOUT CREDIT -->
-                <form class="contact-form" action="https://formsubmit.co/el/nirico" method="POST">
-                    <!-- Success page redirect -->
+                <!-- ✅ UPDATED FORM WITH PROPER REDIRECT -->
+                <form class="contact-form" action="https://formsubmit.co/fototakerkd@gmail.com" method="POST">
+                    <!-- Success page redirect - CORRECT SYNTAX -->
                     <input type="hidden" name="_next" value="https://fototaker.netlify.app/success.html">
                     
                     <!-- Email subject -->
@@ -501,11 +501,8 @@
                     <!-- Disable captcha -->
                     <input type="hidden" name="_captcha" value="false">
                     
-                    <!-- Template for better formatting -->
+                    <!-- Template -->
                     <input type="hidden" name="_template" value="table">
-                    
-                    <!-- Auto-response message -->
-                    <input type="hidden" name="_autoresponse" value="Thank you for contacting FotoTaker! We have received your message and will get back to you within 2 hours. For urgent queries, call us at 9471640485.">
                     
                     <h3>Send us a Message</h3>
                     
@@ -526,17 +523,16 @@
                     
                     <div class="form-group">
                         <label for="contact-message">Your Message *</label>
-                        <textarea id="contact-message" name="message" placeholder="Tell us about your photography needs, event type, date, budget, location..." rows="5" required></textarea>
+                        <textarea id="contact-message" name="message" placeholder="Tell us about your photography needs..." rows="5" required></textarea>
                     </div>
                     
-                    <!-- Honey pot for spam protection -->
+                    <!-- Honey pot -->
                     <input type="text" name="_honey" style="display:none">
                     
                     <button type="submit" class="btn btn-primary btn-block">
                         <i class="fas fa-paper-plane"></i> Send Message
                     </button>
                     
-                    <!-- ✅ CREDIT REMOVED - Clean professional look -->
                     <p class="form-note">
                         <i class="fas fa-clock"></i> We'll respond within 2 hours
                     </p>
@@ -606,6 +602,7 @@
     <script src="script.js"></script>
 </body>
 </html>
+
 
 
 
