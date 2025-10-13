@@ -52,8 +52,11 @@
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-logo">
-                <img src="image/logo.png" alt="FotoTaker Logo" class="logo-img">
-                <h2 class="logo-text">FotoTaker</h2>
+                <!-- Light Theme Logo -->
+                <img src="image/logo-light.png" alt="FotoTaker Logo" class="logo-img logo-img-light">
+                <!-- Dark Theme Logo -->
+                <img src="image/logo-dark.png" alt="FotoTaker Logo" class="logo-img logo-img-dark">
+                <!-- <h2 class="logo-text">FotoTaker</h2> -->
             </div>
             <div class="nav-menu" id="navMenu">
                 <a href="#home" class="nav-link box-link">Home</a>
@@ -560,7 +563,10 @@
             <div class="footer-content">
                 <div class="footer-info">
                     <div class="footer-logo">
-                        <img src="image/logo.png" alt="FotoTaker Logo" class="logo-img" onerror="this.src='https://picsum.photos/100/100?random=1'">
+                        <!-- Light Theme Logo -->
+                        <img src="image/logo-light.png" alt="FotoTaker Logo" class="logo-img logo-img-light" onerror="handleLogoError(this)">
+                        <!-- Dark Theme Logo -->
+                        <img src="image/logo-dark.png" alt="FotoTaker Logo" class="logo-img logo-img-dark" onerror="handleLogoError(this)">
                         <p>Professional Photography & Videography Services</p>
                     </div>
                     <div class="footer-links">
@@ -615,6 +621,7 @@
     <script src="script.js"></script>
 </body>
 </html>
+
 
 
 
