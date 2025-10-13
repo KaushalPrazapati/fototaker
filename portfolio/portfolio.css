@@ -103,6 +103,23 @@ body {
     transform: scale(1.05);
 }
 
+/* Theme-specific logo display */
+.logo-img-light {
+    display: block;
+}
+
+.logo-img-dark {
+    display: none;
+}
+
+.dark-theme .logo-img-light {
+    display: none;
+}
+
+.dark-theme .logo-img-dark {
+    display: block;
+}
+
 .logo-text {
     font-family: var(--font-special);
     font-size: 1.8rem;
@@ -1490,3 +1507,4 @@ img:not([src]) {
 body.loaded {
     visibility: visible;
 }
+
