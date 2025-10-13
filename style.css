@@ -2024,5 +2024,55 @@ html {
     }
 }
 
+// Logo error handler
+function handleLogoError(img) {
+    console.log('Logo failed to load:', img.src);
+    
+    // Fallback to single logo if theme-specific logos don't exist
+    if (img.src.includes('logo-light.png') || img.src.includes('logo-dark.png')) {
+        img.src = 'image/logo.png'; // Fallback to default logo
+        // Remove theme classes to show the fallback logo
+        img.classList.remove('logo-img-light', 'logo-img-dark');
+    }
+}
+
+// Update theme function to handle logos
+function updateLogosForTheme(isDark) {
+    const lightLogos = document.querySelectorAll('.logo-img-light');
+    const darkLogos = document.querySelectorAll('.logo-img-dark');
+    
+    if (isDark) {
+        lightLogos.forEach(logo => logo.style.display = 'none');
+        darkLogos.forEach(logo => logo.style.display = 'block');
+    } else {
+        lightLogos.forEach(logo => logo.style.display = 'block');
+        darkLogos.forEach(logo => logo.style.display = 'none');
+    }
+}
+
+// Updated theme apply function
+const applyTheme = (theme) => {
+    console.log('Applying theme:', theme);
+    
+    const isDark = theme === 'dark';
+    
+    if (isDark) {
+        body.classList.add('dark-theme');
+        body.classList.remove('light-theme');
+        themeIcon.classList.remove('fa-moon');
+        themeIcon.classList.add('fa-sun');
+    } else {
+        body.classList.remove('dark-theme');
+        body.classList.add('light-theme');
+        themeIcon.classList.remove('fa-sun');
+        themeIcon.classList.add('fa-moon');
+    }
+    
+    // Update logos for theme
+    updateLogosForTheme(isDark);
+    
+    // Update navbar background
+    updateNavbarBackground();
+};
 
 
