@@ -1,647 +1,921 @@
-<!DOCTYPE html>
-<html lang="hi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- Favicon -->
-    <link rel="apple-touch-icon" sizes="180x180" href="image/favicon/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="image/favicon/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="image/favicon/favicon-16x16.png">
-    <link rel="manifest" href="image/favicon/site.webmanifest">
-    <link rel="mask-icon" href="image/favicon/safari-pinned-tab.svg" color="#5bbad5">
-    <link rel="shortcut icon" href="image/favicon/favicon.ico">
-    <meta name="msapplication-TileColor" content="#da532c">
-    <meta name="msapplication-config" content="image/favicon/browserconfig.xml">
-    <meta name="theme-color" content="#ffffff">
-
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
-
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-512GD0Y9L4"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-512GD0Y9L4');
-    </script>
+// Portfolio Page JavaScript - WITH IMAGE VIEWER
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Portfolio page loaded');
     
-    <title>FotoTaker | Best Wedding Photograper in Patna</title>
+    // Initialize all systems
+    initTheme();
+    initNavigation();
+    initPortfolioFilters();
+    initPortfolioLoading();
+    loadVideosForPortfolio();
     
-    <meta name="description" content="Best wedding photographer in your city. Professional photography, pre-wedding shoots, candid photography, videography services. Book now for memorable moments.">
-    <meta name="keywords" content="wedding photographer, pre-wedding shoot, photography services, videography, candid photography, portrait photography">
-    <meta name="author" content="FotoTaker Studio">
+    // Make body visible
+    document.body.classList.add('loaded');
     
-    <!-- Open Graph Tags -->
-    <meta property="og:title" content="FotoTaker - We make your moments memorable forever">
-    <meta property="og:description" content="Best wedding photography services.">
-    <meta property="og:image" content="https://fototaker.netlify.app/image/og-image.jpg">
-    <meta property="og:url" content="https://fototaker.netlify.app">
-    <meta property="og:type" content="website">
+    console.log('Portfolio page initialized');
+});
+
+// Portfolio state management
+let currentPortfolioPage = 0;
+const portfolioPerPage = 12;
+let allPortfolioItems = [];
+let filteredPortfolioItems = [];
+let currentFilter = 'all';
+
+// Image Viewer State
+let currentImageIndex = 0;
+let currentFilteredItems = [];
+
+// Initialize portfolio filters
+function initPortfolioFilters() {
+    const filterBtns = document.querySelectorAll('.filter-btn');
     
-    <link rel="stylesheet" href="style.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600;700&family=Poiret+One&display=swap" rel="stylesheet">
-</head>
-<body class="light-theme">
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-logo">
-                <!-- Light Theme Logo -->
-                <img src="image/logo-light.png" alt="FotoTaker Logo" class="logo-img logo-img-light">
-                <!-- Dark Theme Logo -->
-                <img src="image/logo-dark.png" alt="FotoTaker Logo" class="logo-img logo-img-dark">
-                <!-- <h2 class="logo-text">FotoTaker</h2> -->
-            </div>
-            <div class="nav-menu" id="navMenu">
-                <a href="#home" class="nav-link box-link">Home</a>
-                <a href="#portfolio" class="nav-link box-link">Portfolio</a>
-                <a href="#services" class="nav-link box-link">Services</a>
-                <a href="#booking" class="nav-link box-link">Book Now</a>
-                <a href="#about" class="nav-link box-link">About</a>
-                <a href="#contact" class="nav-link box-link">Contact</a>
-                <button id="themeToggle" class="nav-theme-btn box-theme">
-                    <i class="fas fa-moon"></i>
-                </button>
-            </div>
-            <div class="nav-toggle" id="navToggle">
-                <span class="bar"></span>
-                <span class="bar"></span>
-                <span class="bar"></span>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Hero Section -->
-    <section id="home" class="hero">
-        <div class="hero-content">
-            <h1 class="hero-title">We Make Your Moment <span class="highlight">Memorable Forever</span></h1>
-            <p class="hero-subtitle">Professional Photography & Videography Services</p>
-            <div class="hero-buttons">
-                <a href="#portfolio" class="btn btn-primary">View Our Work</a>
-                <a href="#booking" class="btn btn-secondary">Book Now</a>
-            </div>
-        </div>
-        <div class="hero-overlay"></div>
-    </section>
-
-    <!-- Portfolio Section -->
-    <section id="portfolio" class="portfolio">
-        <div class="container">
-            <!-- Images Section -->
-            <div class="portfolio-images">
-                <h2 class="section-title">Our Photography Work</h2>
-                <p class="section-subtitle">Explore our stunning photography portfolio</p>
-                <div class="portfolio-grid" id="portfolioGrid">
-                    <div class="loading">Loading images...</div>
-                </div>
-            </div>
-
-            <!-- Videos Section -->
-            <div class="portfolio-videos">
-                <h2 class="section-title">Our Videos & Reels</h2>
-                <p class="section-subtitle">Watch our latest work in motion</p>
-                <div class="videos-grid" id="videosGrid">
-                    <div class="loading">Loading videos...</div>
-                </div>
-            </div>
-
-            <!-- View More Button -->
-            <div class="portfolio-cta">
-                <a href="/portfolio/portfolio.html" class="btn btn-primary btn-large">
-                    <i class="fas fa-images"></i> View Complete Portfolio
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Services Section -->
-    <section id="services" class="services">
-        <div class="container">
-            <h2 class="section-title">Our Special Services</h2>
-            <p class="section-subtitle">Professional services for all your needs</p>
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Remove active class from all buttons
+            filterBtns.forEach(b => b.classList.remove('active'));
+            // Add active class to clicked button
+            this.classList.add('active');
             
-            <div class="services-categories">
-                <!-- Wedding Category -->
-                <div class="service-category">
-                    <h3 class="category-title">
-                        <i class="fas fa-ring"></i>
-                        Wedding Services
-                    </h3>
-                    <div class="service-cards">
-                        <div class="service-card" data-service="wedding-photography">
-                            <div class="service-icon">
-                                <i class="fas fa-camera"></i>
-                            </div>
-                            <h4>Wedding Photography</h4>
-                            <p>Complete wedding day coverage with candid and traditional shots</p>
-                            <div class="service-features">
-                                <span>✅ Candid Shots</span>
-                                <span>✅ Traditional Coverage</span>
-                                <span>✅ Family Portraits</span>
-                            </div>
-                            <button class="btn-service-book" onclick="scrollToBooking('wedding-photography')">
-                                Book This Service
-                            </button>
-                        </div>
-                        
-                        <div class="service-card" data-service="wedding-videography">
-                            <div class="service-icon">
-                                <i class="fas fa-video"></i>
-                            </div>
-                            <h4>Wedding Videography</h4>
-                            <p>Cinematic wedding films with drone shots and highlight reels</p>
-                            <div class="service-features">
-                                <span>✅ Cinematic Film</span>
-                                <span>✅ Drone Shots</span>
-                                <span>✅ Highlight Reel</span>
-                            </div>
-                            <button class="btn-service-book" onclick="scrollToBooking('wedding-videography')">
-                                Book This Service
-                            </button>
-                        </div>
-                    </div>
-                </div>
+            const filter = this.getAttribute('data-filter');
+            currentFilter = filter;
+            filterPortfolioItems(filter);
+        });
+    });
+}
 
-                <!-- Pre-Wedding Category -->
-                <div class="service-category">
-                    <h3 class="category-title">
-                        <i class="fas fa-heart"></i>
-                        Pre-Wedding Services
-                    </h3>
-                    <div class="service-cards">
-                        <div class="service-card" data-service="pre-wedding-shoot">
-                            <div class="service-icon">
-                                <i class="fas fa-ring"></i>
-                            </div>
-                            <h4>Pre-Wedding Shoot</h4>
-                            <p>Romantic couple photoshoots at your favorite locations</p>
-                            <div class="service-features">
-                                <span>✅ Outdoor Locations</span>
-                                <span>✅ Multiple Outfits</span>
-                                <span>✅ Professional Editing</span>
-                            </div>
-                            <button class="btn-service-book" onclick="scrollToBooking('pre-wedding-shoot')">
-                                Book This Service
-                            </button>
-                        </div>
-                    </div>
-                </div>
+// Filter portfolio items
+function filterPortfolioItems(filter) {
+    if (filter === 'all') {
+        filteredPortfolioItems = [...allPortfolioItems];
+    } else {
+        filteredPortfolioItems = allPortfolioItems.filter(item => 
+            item.category === filter
+        );
+    }
+    
+    // Reset pagination
+    currentPortfolioPage = 0;
+    
+    // Update current filtered items for image viewer
+    currentFilteredItems = filteredPortfolioItems.filter(item => item.type !== 'video');
+    
+    // Display filtered items
+    displayPortfolioPage();
+}
 
-                <!-- Events Category -->
-                <div class="service-category">
-                    <h3 class="category-title">
-                        <i class="fas fa-birthday-cake"></i>
-                        Event Services
-                    </h3>
-                    <div class="service-cards">
-                        <div class="service-card" data-service="birthday-photography">
-                            <div class="service-icon">
-                                <i class="fas fa-cake-candles"></i>
-                            </div>
-                            <h4>Birthday Photography</h4>
-                            <p>Capture the joy and celebrations of special birthdays</p>
-                            <div class="service-features">
-                                <span>✅ Cake Cutting</span>
-                                <span>✅ Candid Moments</span>
-                                <span>✅ Group Photos</span>
-                            </div>
-                            <button class="btn-service-book" onclick="scrollToBooking('birthday-photography')">
-                                Book This Service
-                            </button>
-                        </div>
-                        
-                        <div class="service-card" data-service="corporate-event">
-                            <div class="service-icon">
-                                <i class="fas fa-building"></i>
-                            </div>
-                            <h4>Corporate Events</h4>
-                            <p>Professional coverage for business events and conferences</p>
-                            <div class="service-features">
-                                <span>✅ Professional Shots</span>
-                                <span>✅ Group Photos</span>
-                                <span>✅ Quick Delivery</span>
-                            </div>
-                            <button class="btn-service-book" onclick="scrollToBooking('corporate-event')">
-                                Book This Service
-                            </button>
-                        </div>
-                    </div>
-                </div>
+// Initialize portfolio loading
+async function initPortfolioLoading() {
+    try {
+        await loadAllPortfolioItems();
+        initPortfolioAnimations();
+        initPortfolioImageModal(); // Initialize image modal
+        setupLoadMore();
+    } catch (error) {
+        console.error('Error loading portfolio:', error);
+        showDefaultPortfolio();
+    }
+}
 
-                <!-- Portrait Category -->
-                <div class="service-category">
-                    <h3 class="category-title">
-                        <i class="fas fa-user-friends"></i>
-                        Portrait Services
-                    </h3>
-                    <div class="service-cards">
-                        <div class="service-card" data-service="family-portrait">
-                            <div class="service-icon">
-                                <i class="fas fa-users"></i>
-                            </div>
-                            <h4>Family Portrait</h4>
-                            <p>Beautiful family portraits to cherish forever</p>
-                            <div class="service-features">
-                                <span>✅ Indoor/Outdoor</span>
-                                <span>✅ Multiple Poses</span>
-                                <span>✅ Digital Copies</span>
-                            </div>
-                            <button class="btn-service-book" onclick="scrollToBooking('family-portrait')">
-                                Book This Service
-                            </button>
-                        </div>
-                        
-                        <div class="service-card" data-service="maternity-shoot">
-                            <div class="service-icon">
-                                <i class="fas fa-baby"></i>
-                            </div>
-                            <h4>Maternity Shoot</h4>
-                            <p>Elegant maternity photography to capture this special time</p>
-                            <div class="service-features">
-                                <span>✅ Creative Concepts</span>
-                                <span>✅ Comfortable Poses</span>
-                                <span>✅ Beautiful Editing</span>
-                            </div>
-                            <button class="btn-service-book" onclick="scrollToBooking('maternity-shoot')">
-                                Book This Service
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="services-cta">
-                <div class="cta-content">
-                    <h3>Ready to Capture Your Special Moments?</h3>
-                    <p>Book your shoot session today and let us create timeless memories for you</p>
-                    <a href="#booking" class="btn btn-primary btn-large">
-                        <i class="fas fa-calendar-check"></i> Book Your Session Now
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Booking Section -->
-    <section id="booking" class="booking">
-        <div class="container">
-            <h2 class="section-title">Book Your Session</h2>
-            <p class="section-subtitle">Fill out the form below and we'll get back to you within 2 hours</p>
-            
-            <div class="booking-content">
-                <div class="booking-info">
-                    <h3>Why Choose Us?</h3>
-                    <div class="booking-features">
-                        <div class="booking-feature">
-                            <i class="fas fa-check-circle"></i>
-                            <div>
-                                <h4>Professional Quality</h4>
-                                <p>High-end equipment and expert editing</p>
-                            </div>
-                        </div>
-                        <div class="booking-feature">
-                            <i class="fas fa-check-circle"></i>
-                            <div>
-                                <h4>Quick Delivery</h4>
-                                <p>Get your photos within promised timeline</p>
-                            </div>
-                        </div>
-                        <div class="booking-feature">
-                            <i class="fas fa-check-circle"></i>
-                            <div>
-                                <h4>Affordable Pricing</h4>
-                                <p>Competitive packages for every budget</p>
-                            </div>
-                        </div>
-                        <div class="booking-feature">
-                            <i class="fas fa-check-circle"></i>
-                            <div>
-                                <h4>Customer Satisfaction</h4>
-                                <p>100% satisfaction guarantee</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="quick-contact">
-                        <h4>Prefer instant booking?</h4>
-                        <button onclick="openWhatsApp('Hello! I want to book photography/videography services')" class="btn btn-whatsapp">
-                            <i class="fab fa-whatsapp"></i> WhatsApp Instant Booking
-                        </button>
-                        <div class="phone-numbers">
-                            <a href="tel:9471640485" class="phone-link">
-                                <i class="fas fa-phone"></i> 9471640485
-                            </a>
-                            <a href="tel:7463937610" class="phone-link">
-                                <i class="fas fa-phone"></i> 7463937610
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                
-                <form class="booking-form" id="bookingForm">
-                    <div class="form-group">
-                        <label for="name">Full Name *</label>
-                        <input type="text" id="name" name="name" required placeholder="Enter your full name">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="phone">Phone Number *</label>
-                        <input type="tel" id="phone" name="phone" required placeholder="Your WhatsApp number">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="email">Email Address</label>
-                        <input type="email" id="email" name="email" placeholder="Your email (optional)">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="serviceType">Service Type *</label>
-                        <select id="serviceType" name="serviceType" required>
-                            <option value="">Select Service Type</option>
-                            <optgroup label="Wedding Services">
-                                <option value="wedding-photography">Wedding Photography</option>
-                                <option value="wedding-videography">Wedding Videography</option>
-                                <option value="wedding-combo">Wedding Photo + Video Combo</option>
-                                <option value="pre-wedding-shoot">Pre-Wedding Shoot</option>
-                            </optgroup>
-                            <optgroup label="Event Services">
-                                <option value="birthday-photography">Birthday Photography</option>
-                                <option value="corporate-event">Corporate Event</option>
-                                <option value="anniversary-shoot">Anniversary Shoot</option>
-                                <option value="baby-shower">Baby Shower</option>
-                            </optgroup>
-                            <optgroup label="Portrait Services">
-                                <option value="family-portrait">Family Portrait</option>
-                                <option value="maternity-shoot">Maternity Shoot</option>
-                                <option value="couple-shoot">Couple Shoot</option>
-                                <option value="professional-portfolio">Professional Portfolio</option>
-                            </optgroup>
-                            <optgroup label="Specialized Services">
-                                <option value="drone-photography">Drone Photography</option>
-                                <option value="commercial-photography">Commercial Photography</option>
-                                <option value="product-photography">Product Photography</option>
-                            </optgroup>
-                            <option value="other">Other Service</option>
-                        </select>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="eventDate">Preferred Date</label>
-                            <input type="date" id="eventDate" name="eventDate">
-                        </div>
-                        <div class="form-group">
-                            <label for="location">Location</label>
-                            <input type="text" id="location" name="location" placeholder="City or venue">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="message">Additional Details</label>
-                        <textarea id="message" name="message" rows="4" placeholder="Tell us about your requirements, number of people, special requests..."></textarea>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary btn-block">
-                        <i class="fas fa-paper-plane"></i> Send Booking Request
-                    </button>
-
-                    <p class="form-note">
-                        <i class="fas fa-clock"></i> We'll contact you within 2 hours to confirm details and discuss pricing
-                    </p>
-                </form>
-            </div>
-        </div>
-    </section>
-
-    <!-- About Section -->
-    <section id="about" class="about">
-        <div class="container">
-            <h2 class="section-title">About FotoTaker</h2>
-            <div class="about-content">
-                <div class="about-text">
-                    <h3>Capturing Life's Precious Moments</h3>
-                    <p>With years of experience in professional photography and videography, we specialize in turning your special moments into timeless memories that you'll cherish forever.</p>
-                    
-                    <div class="about-stats">
-                        <div class="stat">
-                            <div class="stat-number">500+</div>
-                            <div class="stat-label">Happy Clients</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-number">1000+</div>
-                            <div class="stat-label">Events Covered</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-number">5+</div>
-                            <div class="stat-label">Years Experience</div>
-                        </div>
-                    </div>
-
-                    <div class="about-features">
-                        <div class="feature">
-                            <i class="fas fa-camera"></i>
-                            <span>Professional Equipment</span>
-                        </div>
-                        <div class="feature">
-                            <i class="fas fa-edit"></i>
-                            <span>Creative Editing</span>
-                        </div>
-                        <div class="feature">
-                            <i class="fas fa-clock"></i>
-                            <span>On-Time Delivery</span>
-                        </div>
-                        <div class="feature">
-                            <i class="fas fa-heart"></i>
-                            <span>Passionate Team</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="about-image">
-                    <img src="image/about.png" alt="FotoTaker Team" class="about-img" onerror="this.src='https://picsum.photos/600/400?random=10'">
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Contact Section -->
-    <section id="contact" class="contact">
-        <div class="container">
-            <h2 class="section-title">Get In Touch</h2>
-            <div class="contact-content">
-                <div class="contact-info">
-                    <div class="contact-item">
-                        <i class="fas fa-phone"></i>
-                        <div>
-                            <h3>Call Us</h3>
-                            <a href="tel:9471640485" class="contact-link">9471640485</a>
-                            <a href="tel:7463937610" class="contact-link">7463937610</a>
-                        </div>
-                    </div>
-                    <div class="contact-item">
-                        <i class="fas fa-envelope"></i>
-                        <div>
-                            <h3>Email Us</h3>
-                            <a href="mailto:fototakerkd@gmail.com" class="contact-link">fototakerkd@gmail.com</a>
-                        </div>
-                    </div>
-                    <div class="contact-item">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <div>
-                            <h3>Location</h3>
-                            <span class="contact-text">Serving entire city and surrounding areas</span>
-                        </div>
-                    </div>
-                    <div class="contact-item">
-                        <i class="fab fa-whatsapp"></i>
-                        <div>
-                            <h3>WhatsApp</h3>
-                            <a href="https://wa.me/919471640485" target="_blank" class="contact-link">Message us directly</a>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- ✅ UPDATED FORM WITH PROPER REDIRECT -->
-                <form class="contact-form" action="https://formsubmit.co/fototakerkd@gmail.com" method="POST">
-                    <!-- Success page redirect - CORRECT SYNTAX -->
-                    <input type="hidden" name="_next" value="https://fototaker.netlify.app/success.html">
-                    
-                    <!-- Email subject -->
-                    <input type="hidden" name="_subject" value="📸 New Message - FotoTaker Website">
-                    
-                    <!-- Disable captcha -->
-                    <input type="hidden" name="_captcha" value="false">
-                    
-                    <!-- Template -->
-                    <input type="hidden" name="_template" value="table">
-                    
-                    <h3>Send us a Message</h3>
-                    
-                    <div class="form-group">
-                        <label for="contact-name">Your Name *</label>
-                        <input type="text" id="contact-name" name="name" placeholder="Enter your full name" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="contact-email">Your Email *</label>
-                        <input type="email" id="contact-email" name="email" placeholder="Enter your email address" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="contact-phone">Phone Number</label>
-                        <input type="tel" id="contact-phone" name="phone" placeholder="Your WhatsApp number">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="contact-message">Your Message *</label>
-                        <textarea id="contact-message" name="message" placeholder="Tell us about your photography needs..." rows="5" required></textarea>
-                    </div>
-                    
-                    <!-- Honey pot -->
-                    <input type="text" name="_honey" style="display:none">
-                    
-                    <button type="submit" class="btn btn-primary btn-block">
-                        <i class="fas fa-paper-plane"></i> Send Message
-                    </button>
-                    
-                    <p class="form-note">
-                        <i class="fas fa-clock"></i> We'll respond within 2 hours
-                    </p>
-                </form>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-info">
-                    <div class="footer-logo">
-                        <!-- Light Theme Logo -->
-                        <img src="image/logo-light.png" alt="FotoTaker Logo" class="logo-img logo-img-light" onerror="handleLogoError(this)">
-                        <!-- Dark Theme Logo -->
-                        <img src="image/logo-dark.png" alt="FotoTaker Logo" class="logo-img logo-img-dark" onerror="handleLogoError(this)">
-                        <p>Professional Photography & Videography Services</p>
-                    </div>
-                    <div class="footer-links">
-                        <a href="#home">Home</a>
-                        <a href="#portfolio">Portfolio</a>
-                        <a href="#services">Services</a>
-                        <a href="#booking">Booking</a>
-                        <a href="#about">About</a>
-                        <a href="#contact">Contact</a>
-                    </div>
-                </div>
-                <div class="social-links">
-                    <a href="https://instagram.com/fototakerkd" target="_blank" class="social-link">
-                        <i class="fab fa-instagram"></i>
-                    </a>
-                    <a href="https://www.facebook.com/profile.php?id=61582280065446" target="_blank" class="social-link">
-                        <i class="fab fa-facebook"></i>
-                    </a>
-                    <a href="https://wa.me/919471640485" target="_blank" class="social-link">
-                        <i class="fab fa-whatsapp"></i>
-                    </a>
-                    <a href="https://youtube.com/@foto-taker" target="_blank" class="social-link">
-                        <i class="fab fa-youtube"></i>
-                    </a>
-                </div>
-            </div>
-            <p class="copyright">&copy; 2025 FotoTaker. All rights reserved.</p>
-        </div>
-    </footer>
-
-    <!-- Firebase Configuration -->
-    <script>
-        // Firebase Configuration - SINGLE SOURCE OF TRUTH
-        const firebaseConfig = {
-            apiKey: "AIzaSyC-25CvcxzGmFuw3wRg-T9U-eKPuckFw0c",
-            authDomain: "fototaker-studio.firebaseapp.com",
-            projectId: "fototaker-studio",
-            storageBucket: "fototaker-studio.firebasestorage.app",
-            messagingSenderId: "401638389477",
-            appId: "1:401638389477:web:a8af16d0f9b49bf8dc460c",
-            measurementId: "G-W4NT35YBQJ"
-        };
-
-        // Initialize Firebase only once
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
+// Load all portfolio items from Firebase
+async function loadAllPortfolioItems() {
+    const portfolioGrid = document.getElementById('portfolioGridFull');
+    
+    if (!portfolioGrid) return;
+    
+    try {
+        console.log('Loading portfolio from Firebase...');
+        
+        // First try Firebase
+        const db = firebase.firestore();
+        const querySnapshot = await db.collection('portfolio')
+            .orderBy('createdAt', 'desc')
+            .get();
+        
+        const portfolioData = [];
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            portfolioData.push({
+                id: doc.id,
+                type: 'image',
+                ...data
+            });
+        });
+        
+        console.log('Portfolio data loaded:', portfolioData.length, 'items');
+        
+        if (portfolioData.length > 0) {
+            allPortfolioItems = portfolioData;
+            filteredPortfolioItems = [...portfolioData];
+            currentFilteredItems = [...portfolioData]; // For image viewer
+            displayPortfolioPage();
         } else {
-            firebase.app(); // if already initialized, use that one
+            // Fallback to localStorage (admin panel data)
+            loadPortfolioFromLocalStorage();
         }
-    </script>
+    } catch (error) {
+        console.error('Error loading portfolio from Firebase:', error);
+        // Fallback to localStorage
+        loadPortfolioFromLocalStorage();
+    }
+}
 
-    <script src="script.js"></script>
-</body>
-</html>
+// Load portfolio from localStorage (admin panel data)
+function loadPortfolioFromLocalStorage() {
+    const portfolioData = JSON.parse(localStorage.getItem('portfolioData')) || [];
+    
+    if (portfolioData.length > 0) {
+        allPortfolioItems = portfolioData.map(item => ({ ...item, type: 'image' }));
+        filteredPortfolioItems = [...allPortfolioItems];
+        currentFilteredItems = [...allPortfolioItems]; // For image viewer
+        displayPortfolioPage();
+    } else {
+        // Final fallback - default portfolio
+        showDefaultPortfolio();
+    }
+}
 
+// Display current page of portfolio items
+function displayPortfolioPage() {
+    const portfolioGrid = document.getElementById('portfolioGridFull');
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    
+    if (!portfolioGrid) return;
+    
+    const startIndex = currentPortfolioPage * portfolioPerPage;
+    const endIndex = startIndex + portfolioPerPage;
+    const itemsToShow = filteredPortfolioItems.slice(0, endIndex);
+    
+    if (itemsToShow.length === 0) {
+        portfolioGrid.innerHTML = `
+            <div class="loading" style="grid-column: 1 / -1;">
+                <p>No portfolio items found for this filter.</p>
+                <p>Try selecting a different category or check back later.</p>
+            </div>
+        `;
+        if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+        return;
+    }
+    
+    portfolioGrid.innerHTML = itemsToShow.map((item, index) => `
+        <div class="portfolio-item-full" data-categories="${item.category || 'all'}" data-index="${index}">
+            <img src="${item.image || 'https://picsum.photos/400/600?random=' + Math.floor(Math.random() * 100)}" 
+                 alt="${item.title || 'Portfolio Image'}" 
+                 onerror="handleImageError(this)">
+            <div class="portfolio-overlay-full">
+                <h3>${item.title || 'Portfolio Item'}</h3>
+                ${item.description ? `<p>${item.description}</p>` : ''}
+                <small>${getCategoryDisplayName(item.category)}</small>
+            </div>
+            <div class="category-badge">${getCategoryDisplayName(item.category)}</div>
+        </div>
+    `).join('');
+    
+    // Update load more button
+    if (loadMoreBtn) {
+        if (endIndex >= filteredPortfolioItems.length) {
+            loadMoreBtn.style.display = 'none';
+        } else {
+            loadMoreBtn.style.display = 'inline-flex';
+            loadMoreBtn.disabled = false;
+            const loadMoreSpinner = document.getElementById('loadMoreSpinner');
+            const loadMoreText = document.getElementById('loadMoreText');
+            if (loadMoreSpinner) loadMoreSpinner.style.display = 'none';
+            if (loadMoreText) loadMoreText.textContent = 'Load More';
+        }
+    }
+    
+    // Re-initialize animations after loading content
+    initPortfolioAnimations();
+}
 
+// ===== PORTFOLIO IMAGE VIEWER MODAL =====
+function initPortfolioImageModal() {
+    const portfolioItems = document.querySelectorAll('.portfolio-item-full');
+    
+    portfolioItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const index = parseInt(this.getAttribute('data-index'));
+            const imageSrc = this.querySelector('img').src;
+            const title = this.querySelector('h3')?.textContent || 'Portfolio Image';
+            const description = this.querySelector('p')?.textContent || '';
+            const category = this.querySelector('small')?.textContent || '';
+            
+            // Set current image index
+            currentImageIndex = index;
+            
+            // Show image modal
+            showPortfolioImageModal(imageSrc, title, description, category, index);
+        });
+    });
+}
 
+// Show portfolio image modal
+function showPortfolioImageModal(imageSrc, title, description, category, index) {
+    // Remove existing modal first
+    const existingModal = document.querySelector('.portfolio-modal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Get current filtered items (only images)
+    const currentImages = currentFilteredItems.filter(item => item.type !== 'video');
+    
+    // Create modal
+    const modal = document.createElement('div');
+    modal.className = 'portfolio-modal active';
+    
+    modal.innerHTML = `
+        <div class="portfolio-modal-content">
+            <button class="portfolio-modal-close" onclick="closePortfolioImageModal()">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            ${currentImages.length > 1 ? `
+                <button class="portfolio-modal-nav portfolio-modal-prev" onclick="navigatePortfolioImage(-1)">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="portfolio-modal-nav portfolio-modal-next" onclick="navigatePortfolioImage(1)">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                <div class="portfolio-modal-counter">
+                    ${index + 1} / ${currentImages.length}
+                </div>
+            ` : ''}
+            
+            <img src="${imageSrc}" alt="${title}" class="portfolio-modal-image" 
+                 onerror="this.src='https://picsum.photos/600/800?random=1'">
+            
+            <div class="portfolio-modal-info">
+                <h3>${title}</h3>
+                ${description ? `<p>${description}</p>` : ''}
+                <small>${category}</small>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Close modal when clicking outside
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closePortfolioImageModal();
+        }
+    });
+    
+    // Keyboard navigation
+    const handleKeydown = function(e) {
+        if (e.key === 'Escape') {
+            closePortfolioImageModal();
+        } else if (e.key === 'ArrowLeft') {
+            navigatePortfolioImage(-1);
+        } else if (e.key === 'ArrowRight') {
+            navigatePortfolioImage(1);
+        }
+    };
+    document.addEventListener('keydown', handleKeydown);
+    
+    // Store the event listener for cleanup
+    modal._keydownHandler = handleKeydown;
+    
+    // Prevent body scroll when modal is open
+    document.body.style.overflow = 'hidden';
+}
 
+// Close portfolio image modal
+function closePortfolioImageModal() {
+    const modal = document.querySelector('.portfolio-modal');
+    if (modal) {
+        // Remove keyboard event listener
+        if (modal._keydownHandler) {
+            document.removeEventListener('keydown', modal._keydownHandler);
+        }
+        
+        modal.style.animation = 'fadeOut 0.3s ease';
+        setTimeout(() => {
+            modal.remove();
+            // Restore body scroll
+            document.body.style.overflow = '';
+        }, 300);
+    }
+}
 
+// Navigate between portfolio images
+function navigatePortfolioImage(direction) {
+    const currentImages = currentFilteredItems.filter(item => item.type !== 'video');
+    
+    if (currentImages.length <= 1) return;
+    
+    currentImageIndex += direction;
+    
+    // Handle wrap-around
+    if (currentImageIndex < 0) {
+        currentImageIndex = currentImages.length - 1;
+    } else if (currentImageIndex >= currentImages.length) {
+        currentImageIndex = 0;
+    }
+    
+    const nextImage = currentImages[currentImageIndex];
+    if (!nextImage) return;
+    
+    const imageSrc = nextImage.image || 'https://picsum.photos/600/800?random=1';
+    const title = nextImage.title || 'Portfolio Image';
+    const description = nextImage.description || '';
+    const category = getCategoryDisplayName(nextImage.category);
+    
+    // Update modal with new image
+    showPortfolioImageModal(imageSrc, title, description, category, currentImageIndex);
+}
 
+// Load more portfolio items
+async function loadMorePortfolio() {
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    const loadMoreSpinner = document.getElementById('loadMoreSpinner');
+    const loadMoreText = document.getElementById('loadMoreText');
+    
+    if (!loadMoreBtn) return;
+    
+    try {
+        loadMoreBtn.disabled = true;
+        if (loadMoreSpinner) loadMoreSpinner.style.display = 'inline-block';
+        if (loadMoreText) loadMoreText.textContent = 'Loading...';
+        
+        // Simulate loading delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        currentPortfolioPage++;
+        displayPortfolioPage();
+        
+        // Re-initialize modal for new items
+        initPortfolioImageModal();
+        
+    } catch (error) {
+        console.error('Error loading more portfolio items:', error);
+        showNotification('Error loading more items', 'error');
+        loadMoreBtn.disabled = false;
+        if (loadMoreSpinner) loadMoreSpinner.style.display = 'none';
+        if (loadMoreText) loadMoreText.textContent = 'Load More';
+    }
+}
 
+// Setup load more functionality
+function setupLoadMore() {
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', loadMorePortfolio);
+    }
+}
 
+// Initialize portfolio animations
+function initPortfolioAnimations() {
+    const portfolioItems = document.querySelectorAll('.portfolio-item-full');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry, index) => {
+            if (entry.isIntersecting) {
+                setTimeout(() => {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'scale(1)';
+                }, index * 100);
+            }
+        });
+    }, {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    });
 
+    portfolioItems.forEach(item => {
+        item.style.opacity = '0';
+        item.style.transform = 'scale(0.8)';
+        item.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+        observer.observe(item);
+    });
+}
 
+// ==================== VIDEOS SECTION ====================
 
+// Videos Loading for Portfolio Page
+async function loadVideosForPortfolio() {
+    try {
+        const db = firebase.firestore();
+        const querySnapshot = await db.collection('videos')
+            .orderBy('createdAt', 'desc')
+            .limit(6)
+            .get();
+        
+        const videosGrid = document.getElementById('videosGrid');
+        
+        if (!videosGrid) {
+            console.log('Videos grid not found on this page');
+            return;
+        }
+        
+        if (querySnapshot.empty) {
+            videosGrid.innerHTML = '<p class="text-center">No videos available yet. Check back later!</p>';
+            return;
+        }
+        
+        const videosData = [];
+        querySnapshot.forEach((doc) => {
+            videosData.push({
+                id: doc.id,
+                ...doc.data()
+            });
+        });
+        
+        videosGrid.innerHTML = videosData.map(video => {
+            // Platform-based styling
+            const isReel = video.platform === 'instagram' || video.platform === 'reels';
+            const videoClass = isReel ? 'video-card reel-video' : 'video-card youtube-video';
+            
+            return `
+                <div class="${videoClass}">
+                    <div class="video-thumbnail">
+                        <img src="${video.thumbnail}" alt="${video.title}" 
+                             onerror="this.src='https://picsum.photos/${isReel ? '300/500' : '400/300'}?random=1'">
+                        <button class="video-play-btn" onclick="playVideo('${video.url}', '${video.platform}', '${video.title || 'Video'}')">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <div class="video-platform-badge ${video.platform}">
+                            <i class="fab fa-${video.platform === 'youtube' ? 'youtube' : 'instagram'}"></i>
+                            ${video.platform === 'youtube' ? 'YouTube' : 'Reel'}
+                        </div>
+                    </div>
+                    <div class="video-info">
+                        <h3>${video.title || 'Video'}</h3>
+                        <p>${video.description || ''}</p>
+                        <small>${getCategoryDisplayName(video.category)}</small>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        // Initialize video animations
+        initVideoAnimations();
+        
+    } catch (error) {
+        console.error('Error loading videos:', error);
+        const videosGrid = document.getElementById('videosGrid');
+        if (videosGrid) {
+            videosGrid.innerHTML = '<p class="text-center">Error loading videos. Please try again later.</p>';
+        }
+    }
+}
 
+// Show default portfolio (fallback)
+function showDefaultPortfolio() {
+    const defaultItems = [
+        { category: 'wedding', title: 'Beautiful Wedding Ceremony', description: 'Traditional wedding moments', image: 'https://picsum.photos/400/600?random=1' },
+        { category: 'pre-wedding', title: 'Romantic Pre-Wedding', description: 'Couple photoshoot in nature', image: 'https://picsum.photos/400/600?random=2' },
+        { category: 'portrait', title: 'Professional Portrait', description: 'Studio portrait session', image: 'https://picsum.photos/400/600?random=3' },
+        { category: 'events', title: 'Corporate Event', description: 'Business conference coverage', image: 'https://picsum.photos/400/600?random=4' },
+        { category: 'wedding', title: 'Candid Wedding Moments', description: 'Natural and emotional shots', image: 'https://picsum.photos/400/600?random=5' },
+        { category: 'pre-wedding', title: 'Urban Couple Shoot', description: 'Cityscape photography', image: 'https://picsum.photos/400/600?random=6' },
+        { category: 'portrait', title: 'Family Portrait', description: 'Multi-generational family photos', image: 'https://picsum.photos/400/600?random=7' },
+        { category: 'events', title: 'Birthday Celebration', description: 'Special birthday event', image: 'https://picsum.photos/400/600?random=8' },
+        { category: 'wedding', title: 'Traditional Ceremony', description: 'Cultural wedding traditions', image: 'https://picsum.photos/400/600?random=9' },
+        { category: 'pre-wedding', title: 'Beach Shoot', description: 'Sunset couple photos', image: 'https://picsum.photos/400/600?random=10' },
+        { category: 'portrait', title: 'Maternity Shoot', description: 'Pregnancy photography', image: 'https://picsum.photos/400/600?random=11' },
+        { category: 'events', title: 'Anniversary Party', description: '25 years celebration', image: 'https://picsum.photos/400/600?random=12' }
+    ];
+    
+    allPortfolioItems = defaultItems;
+    filteredPortfolioItems = [...defaultItems];
+    currentFilteredItems = [...defaultItems];
+    displayPortfolioPage();
+}
 
+// Video Play Function
+function playVideo(videoUrl, platform, videoTitle = 'Video') {
+    console.log('Playing video:', videoUrl, platform, videoTitle);
+    
+    // Remove any existing modal first
+    const existingModal = document.querySelector('.video-modal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Create modal
+    const modal = document.createElement('div');
+    modal.className = 'video-modal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        padding: 20px;
+        animation: fadeIn 0.3s ease;
+    `;
+    
+    const isReel = platform === 'instagram' || platform === 'reels';
+    
+    // Convert URLs to embed format
+    let embedUrl = videoUrl;
+    
+    // YouTube URL conversion
+    if (videoUrl.includes('youtube.com/watch?v=')) {
+        const videoId = videoUrl.split('v=')[1]?.split('&')[0];
+        embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&showinfo=0`;
+    } else if (videoUrl.includes('youtu.be/')) {
+        const videoId = videoUrl.split('youtu.be/')[1];
+        embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&showinfo=0`;
+    }
+    
+    // Determine modal size based on platform
+    const modalWidth = isReel ? '400px' : '800px';
+    const modalHeight = isReel ? '700px' : '500px';
+    
+    modal.innerHTML = `
+        <div class="video-modal-content" style="
+            position: relative;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            width: ${modalWidth};
+            max-width: 95vw;
+            height: ${modalHeight};
+            max-height: 90vh;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            animation: scaleIn 0.3s ease;
+        ">
+            <!-- Close Button -->
+            <button class="close-modal" onclick="closeVideoModal()" style="
+                position: absolute;
+                top: 15px;
+                right: 15px;
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                z-index: 10;
+                font-size: 1.2rem;
+                transition: all 0.3s ease;
+            ">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <!-- Modal Header -->
+            <div class="modal-header" style="
+                padding: 1.5rem;
+                background: #f8f9fa;
+                border-bottom: 1px solid #e9ecef;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            ">
+                <i class="fab fa-${isReel ? 'instagram' : 'youtube'}" 
+                   style="color: ${isReel ? '#E4405F' : '#FF0000'}; 
+                          font-size: 1.5rem;"></i>
+                <h3 style="margin: 0; color: #333; font-size: 1.3rem; font-weight: 600;">
+                    ${videoTitle}
+                </h3>
+            </div>
+            
+            <!-- Video Content -->
+            <div class="modal-video-container" style="height: calc(100% - 80px);">
+                ${embedUrl.includes('youtube.com/embed') 
+                    ? `<div style="width: 100%; height: 100%;">
+                         <iframe 
+                             src="${embedUrl}" 
+                             style="width: 100%; height: 100%; border: none;"
+                             frameborder="0" 
+                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                             allowfullscreen>
+                         </iframe>
+                       </div>`
+                    : `<div style="padding: 3rem 2rem; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                          <i class="fab fa-${isReel ? 'instagram' : 'video'}" 
+                             style="font-size: 4rem; color: #ddd; margin-bottom: 1.5rem;"></i>
+                          <h4 style="color: #666; margin-bottom: 1rem; font-size: 1.2rem;">
+                              ${isReel ? 'Instagram Reel' : 'Video'} Preview
+                          </h4>
+                          <p style="color: #888; margin-bottom: 2rem; line-height: 1.5;">
+                              This content cannot be embedded here. Click the button below to watch it on ${isReel ? 'Instagram' : 'the original platform'}.
+                          </p>
+                          <a href="${videoUrl}" target="_blank" style="
+                              display: inline-flex;
+                              align-items: center;
+                              gap: 10px;
+                              padding: 12px 30px;
+                              background: var(--primary-color);
+                              color: white;
+                              text-decoration: none;
+                              border-radius: 25px;
+                              font-weight: 600;
+                              font-size: 1rem;
+                              transition: all 0.3s ease;
+                          " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(99, 102, 241, 0.3)';"
+                          onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                              <i class="fas fa-external-link-alt"></i> 
+                              Watch on ${isReel ? 'Instagram' : 'YouTube'}
+                          </a>
+                       </div>`
+                }
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Close modal when clicking outside
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeVideoModal();
+        }
+    });
+    
+    // Close with Escape key
+    const closeWithEscape = function(e) {
+        if (e.key === 'Escape') {
+            closeVideoModal();
+            document.removeEventListener('keydown', closeWithEscape);
+        }
+    };
+    document.addEventListener('keydown', closeWithEscape);
+}
 
+// Close video modal function
+function closeVideoModal() {
+    const modal = document.querySelector('.video-modal');
+    if (modal) {
+        modal.style.animation = 'fadeOut 0.3s ease';
+        setTimeout(() => {
+            modal.remove();
+        }, 300);
+    }
+}
 
+// Initialize video animations
+function initVideoAnimations() {
+    const videoCards = document.querySelectorAll('.video-card');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry, index) => {
+            if (entry.isIntersecting) {
+                setTimeout(() => {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }, index * 150);
+            }
+        });
+    }, {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    });
 
+    videoCards.forEach(card => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(card);
+    });
+}
 
+// ==================== HELPER FUNCTIONS ====================
 
+// Helper function to get category display name
+function getCategoryDisplayName(category) {
+    const categoryMap = {
+        'wedding': 'Wedding',
+        'pre-wedding': 'Pre-Wedding',
+        'portrait': 'Portrait',
+        'events': 'Events',
+        'drone': 'Drone'
+    };
+    return categoryMap[category] || 'Photography';
+}
 
+// Image error handler
+function handleImageError(img) {
+    console.log('Image failed to load:', img.src);
+    if (!img.src.includes('picsum.photos')) {
+        img.src = 'https://picsum.photos/400/600?random=' + Math.floor(Math.random() * 100);
+    }
+}
 
+// Notification system
+function showNotification(message, type = 'info') {
+    // Remove existing notification
+    const existingNotification = document.querySelector('.notification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+    
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <span class="notification-message">${message}</span>
+            <button class="notification-close">&times;</button>
+        </div>
+    `;
+    
+    // Add styles if not exists
+    if (!document.querySelector('#notification-styles')) {
+        const styles = document.createElement('style');
+        styles.id = 'notification-styles';
+        styles.textContent = `
+            .notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #27ae60;
+                color: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                z-index: 10000;
+                max-width: 400px;
+                animation: slideInRight 0.3s ease;
+            }
+            .notification-error { background: #e74c3c; }
+            .notification-warning { background: #f39c12; }
+            .notification-info { background: #3498db; }
+            .notification-content {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .notification-close {
+                background: none;
+                border: none;
+                color: white;
+                font-size: 18px;
+                cursor: pointer;
+                margin-left: 10px;
+            }
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOutRight {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(styles);
+    }
+    
+    document.body.appendChild(notification);
+    
+    // Close button event
+    const closeBtn = notification.querySelector('.notification-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+            notification.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        });
+    }
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, 5000);
+}
 
+// Theme Management
+function initTheme() {
+    const themeToggle = document.getElementById('themeToggle');
+    const body = document.body;
+    
+    if (!themeToggle) return;
+    
+    const themeIcon = themeToggle.querySelector('i');
+    
+    // Check saved theme or system preference
+    const getSavedTheme = () => {
+        const saved = localStorage.getItem('theme');
+        if (saved) return saved;
+        
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            return 'dark';
+        }
+        return 'light';
+    };
+    
+    // Apply theme function
+    const applyTheme = (theme) => {
+        if (theme === 'dark') {
+            body.classList.add('dark-theme');
+            body.classList.remove('light-theme');
+            themeIcon.classList.remove('fa-moon');
+            themeIcon.classList.add('fa-sun');
+        } else {
+            body.classList.remove('dark-theme');
+            body.classList.add('light-theme');
+            themeIcon.classList.remove('fa-sun');
+            themeIcon.classList.add('fa-moon');
+        }
+    };
+    
+    // Initialize theme
+    const savedTheme = getSavedTheme();
+    applyTheme(savedTheme);
+    
+    // Theme toggle click event
+    themeToggle.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const isDark = body.classList.contains('dark-theme');
+        const newTheme = isDark ? 'light' : 'dark';
+        
+        applyTheme(newTheme);
+        localStorage.setItem('theme', newTheme);
+    });
+}
 
+// Navigation Management
+function initNavigation() {
+    const navToggle = document.getElementById('navToggle');
+    const navMenu = document.getElementById('navMenu');
+    
+    // Mobile navigation toggle
+    if (navToggle && navMenu) {
+        navToggle.addEventListener('click', function() {
+            navMenu.classList.toggle('active');
+            this.classList.toggle('active');
+        });
+    }
+    
+    // Close mobile menu function
+    function closeMobileMenu() {
+        if (navMenu) navMenu.classList.remove('active');
+        if (navToggle) navToggle.classList.remove('active');
+    }
+    
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', function(e) {
+        if (navMenu && navToggle && 
+            !navMenu.contains(e.target) && 
+            !navToggle.contains(e.target) &&
+            navMenu.classList.contains('active')) {
+            closeMobileMenu();
+        }
+    });
+    
+    // Close mobile menu when clicking on nav links
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', function() {
+            closeMobileMenu();
+        });
+    });
+    
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href');
+            if (targetId === '#') return;
+            
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
+                targetElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+}
 
+// WhatsApp integration for portfolio page
+function openWhatsApp(prefilledMessage = '') {
+    const phone = '917324883263';
+    const message = prefilledMessage || 'Hello! I saw your portfolio and want to book photography/videography services';
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+}
 
+// Handle image errors on page load
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('img').forEach(img => {
+        img.onerror = function() {
+            handleImageError(this);
+        };
+    });
+});
+
+// Make functions globally available
+window.loadMorePortfolio = loadMorePortfolio;
+window.playVideo = playVideo;
+window.closeVideoModal = closeVideoModal;
+window.openWhatsApp = openWhatsApp;
+window.handleImageError = handleImageError;
+window.closePortfolioImageModal = closePortfolioImageModal;
+window.navigatePortfolioImage = navigatePortfolioImage;
