@@ -1,22 +1,276 @@
-// Simple and Fixed Theme Toggle
+// Firebase Configuration Check
+console.log('Initializing Firebase...');
+
+// Check if Firebase is already initialized
+if (typeof firebaseConfig === 'undefined') {
+    console.log('Firebase config not found in HTML, initializing...');
+    
+    // Firebase Configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyC-25CvcxzGmFuw3wRg-T9U-eKPuckFw0c",
+        authDomain: "fototaker-studio.firebaseapp.com",
+        projectId: "fototaker-studio",
+        storageBucket: "fototaker-studio.firebasestorage.app",
+        messagingSenderId: "401638389477",
+        appId: "1:401638389477:web:a8af16d0f9b49bf8dc460c",
+        measurementId: "G-W4NT35YBQJ"
+    };
+
+    // Initialize Firebase only if not already initialized
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+        console.log('Firebase initialized successfully');
+    } else {
+        console.log('Firebase already initialized');
+    }
+} else {
+    console.log('Firebase config found in HTML');
+}
+
+// Firebase services reference with error handling
+let db, storage;
+try {
+    db = firebase.firestore();
+    storage = firebase.storage();
+    console.log('Firebase services initialized');
+} catch (error) {
+    console.error('Firebase services error:', error);
+    // Fallback: Create dummy objects to prevent errors
+    db = { 
+        collection: () => ({ 
+            get: () => Promise.resolve({ forEach: () => {} }),
+            add: () => Promise.resolve()
+        }) 
+    };
+    storage = {};
+}
+
+// Utility Functions
+function showNotification(message, type = 'info') {
+    // Remove existing notification
+    const existingNotification = document.querySelector('.notification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+
+    // Set background color based on type
+    const backgroundColor = type === 'success' ? '#27ae60' : 
+                           type === 'error' ? '#e74c3c' : '#3498db';
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <span class="notification-message">${message}</span>
+            <button class="notification-close">&times;</button>
+        </div>
+    `;
+
+    // Style the notification
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${backgroundColor};
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        z-index: 10000;
+        max-width: 400px;
+        animation: slideInRight 0.3s ease;
+    `;
+
+    // Close button functionality
+    const closeBtn = notification.querySelector('.notification-close');
+    closeBtn.style.cssText = `
+        background: none;
+        border: none;
+        color: white;
+        font-size: 18px;
+        cursor: pointer;
+        margin-left: 10px;
+    `;
+
+    closeBtn.addEventListener('click', () => {
+        notification.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+    });
+
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, 5000);
+
+    document.body.appendChild(notification);
+}
+
+// Service Name Mapping
+function getServiceDisplayName(serviceKey) {
+    const serviceNames = {
+        'wedding-photography': 'Wedding Photography',
+        'wedding-videography': 'Wedding Videography', 
+        'wedding-combo': 'Wedding Photo+Video Combo',
+        'pre-wedding-shoot': 'Pre-Wedding Shoot',
+        'birthday-photography': 'Birthday Photography',
+        'anniversary-shoot': 'Anniversary Shoot',
+        'corporate-event': 'Corporate Event Coverage',
+        'baby-shower': 'Baby Shower Photography',
+        'engagement': 'Engagement Ceremony',
+        'family-portrait': 'Family Portrait',
+        'couple-shoot': 'Couple Shoot',
+        'maternity-shoot': 'Maternity Photography',
+        'newborn-photography': 'Newborn Photography',
+        'professional-portfolio': 'Professional Portfolio',
+        'drone-photography': 'Drone Photography',
+        'aerial-videography': 'Aerial Videography',
+        'commercial-photography': 'Commercial Photography',
+        'product-photography': 'Product Photography',
+        'real-estate-photography': 'Real Estate Photography',
+        'video-editing': 'Video Editing',
+        'photo-editing': 'Photo Editing',
+        'album-design': 'Photo Album Design',
+        'cinematic-video': 'Cinematic Video Making',
+        'other': 'Photography Service'
+    };
+    
+    return serviceNames[serviceKey] || 'Photography Service';
+}
+
+// Category Name Mapping
+function getCategoryDisplayName(category) {
+    const categoryMap = {
+        'wedding': 'Wedding Photography',
+        'pre-wedding': 'Pre-Wedding Shoots',
+        'portrait': 'Portrait Photography',
+        'events': 'Events',
+        'drone': 'Drone Shots',
+        'birthday': 'Birthday Party',
+        'corporate': 'Corporate Event',
+        'family': 'Family Portrait',
+        'maternity': 'Maternity Shoot'
+    };
+    return categoryMap[category] || category || 'Photography';
+}
+
+// Image Error Handler
+function handleImageError(img) {
+    console.log('Image failed to load:', img.src);
+    if (!img.src.includes('picsum.photos')) {
+        img.src = 'https://picsum.photos/400/600?random=' + Math.floor(Math.random() * 100);
+    }
+}
+
+// Logo Error Handler
+function handleLogoError(img) {
+    console.log('Logo failed to load:', img.src);
+    
+    // Fallback to single logo if theme-specific logos don't exist
+    if (img.src.includes('logo-light.png') || img.src.includes('logo-dark.png')) {
+        img.src = 'image/logo.png';
+        img.classList.remove('logo-img-light', 'logo-img-dark');
+    }
+}
+
+// Founder image error handler
+function handleFounderImageError(img) {
+    console.log('Founder image failed to load:', img.src);
+    
+    // Set default professional placeholder
+    const placeholder = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80';
+    img.src = placeholder;
+}
+
+// WhatsApp Integration
+function openWhatsApp(prefilledMessage = '') {
+    const phone = '917324883263';
+    const message = prefilledMessage || 'Hello! I want to book photography/videography services';
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+}
+
+// Scroll to Booking with Service Pre-selection
+function scrollToBooking(serviceType) {
+    const bookingSection = document.getElementById('booking');
+    const serviceSelect = document.getElementById('serviceType');
+    
+    if (bookingSection && serviceSelect) {
+        serviceSelect.value = serviceType;
+        bookingSection.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }
+}
+
+// Send WhatsApp Booking Notification
+function sendWhatsAppBookingNotification(bookingData) {
+    const phone = '917324883263';
+    const serviceName = getServiceDisplayName(bookingData.serviceType);
+    
+    const message = `📸 NEW BOOKING REQUEST - ${serviceName.toUpperCase()}
+
+👤 Client: ${bookingData.name}
+📞 Phone: ${bookingData.phone}
+📧 Email: ${bookingData.email || 'Not provided'}
+
+🎯 Service: ${serviceName}
+📅 Date: ${bookingData.eventDate || 'Not specified'}
+📍 Location: ${bookingData.location || 'Not specified'}
+
+📝 Requirements:
+${bookingData.message || 'No additional details'}
+
+⏰ Received: ${new Date().toLocaleString()}
+🌐 Source: Website Booking Form`;
+
+    const whatsappURL = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappURL, '_blank');
+}
+
+// Form Validation
+function validateForm(formData, requiredFields) {
+    for (const field of requiredFields) {
+        if (!formData[field] || formData[field].trim() === '') {
+            return { isValid: false, message: `Please fill in ${field}` };
+        }
+    }
+    return { isValid: true };
+}
+
+// ==================== MAIN INITIALIZATION ====================
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded - initializing website');
+    
+    // Make body visible immediately
+    document.body.style.visibility = 'visible';
     
     // Initialize all systems
     initTheme();
     initNavigation();
-    initPortfolioAnimations();
+    initPortfolioSystem();
     initServiceAnimations();
     initBookingSystem();
     initContactForm();
-    
-    // Load limited portfolio for home page
-    loadLimitedPortfolio();
+    initAboutSection();
     
     console.log('Website initialized successfully');
+    
+    // Add image error handlers to all images
+    document.querySelectorAll('img').forEach(img => {
+        img.onerror = function() {
+            handleImageError(this);
+        };
+    });
 });
 
-// Theme Management (FIXED)
+// ==================== THEME MANAGEMENT ====================
+
 function initTheme() {
     const themeToggle = document.getElementById('themeToggle');
     const body = document.body;
@@ -28,11 +282,12 @@ function initTheme() {
     
     const themeIcon = themeToggle.querySelector('i');
     
-    // Check saved theme or system preference
+    // Get saved theme or system preference
     const getSavedTheme = () => {
         const saved = localStorage.getItem('theme');
         if (saved) return saved;
         
+        // Check system preference
         if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
             return 'dark';
         }
@@ -55,12 +310,26 @@ function initTheme() {
             themeIcon.classList.add('fa-moon');
         }
         
-        // Update navbar background
         updateNavbarBackground();
+        updateLogosForTheme(theme === 'dark');
     };
     
-    // Update navbar background based on scroll and theme
-    const updateNavbarBackground = () => {
+    // Update logos for theme
+    function updateLogosForTheme(isDark) {
+        const lightLogos = document.querySelectorAll('.logo-img-light');
+        const darkLogos = document.querySelectorAll('.logo-img-dark');
+        
+        if (isDark) {
+            lightLogos.forEach(logo => logo.style.display = 'none');
+            darkLogos.forEach(logo => logo.style.display = 'block');
+        } else {
+            lightLogos.forEach(logo => logo.style.display = 'block');
+            darkLogos.forEach(logo => logo.style.display = 'none');
+        }
+    }
+    
+    // Update navbar background based on scroll
+    function updateNavbarBackground() {
         const navbar = document.querySelector('.navbar');
         if (!navbar) return;
         
@@ -75,7 +344,7 @@ function initTheme() {
                 : 'rgba(255, 255, 255, 0.95)';
             navbar.style.boxShadow = 'none';
         }
-    };
+    }
     
     // Initialize theme
     const savedTheme = getSavedTheme();
@@ -104,7 +373,8 @@ function initTheme() {
     window.addEventListener('scroll', updateNavbarBackground);
 }
 
-// Navigation Management (FIXED)
+// ==================== NAVIGATION MANAGEMENT ====================
+
 function initNavigation() {
     const navToggle = document.getElementById('navToggle');
     const navMenu = document.getElementById('navMenu');
@@ -189,18 +459,21 @@ function initNavigation() {
     updateActiveNavLink();
 }
 
-// ===== PORTFOLIO SYSTEM - SEPARATE IMAGES AND VIDEOS SECTIONS =====
+// ==================== PORTFOLIO SYSTEM ====================
 
-// Load portfolio for home page with separate sections
+function initPortfolioSystem() {
+    loadLimitedPortfolio();
+}
+
+// Load portfolio for home page
 async function loadLimitedPortfolio() {
     try {
         console.log('Loading portfolio with separate sections from Firebase...');
         
         // Load portfolio images
-        const db = firebase.firestore();
         const portfolioSnapshot = await db.collection('portfolio')
             .orderBy('createdAt', 'desc')
-            .limit(6) // Load 6 images for home page
+            .limit(6)
             .get();
         
         const portfolioData = [];
@@ -216,7 +489,7 @@ async function loadLimitedPortfolio() {
         // Load videos for portfolio
         const videosSnapshot = await db.collection('videos')
             .orderBy('createdAt', 'desc')
-            .limit(3) // Load 3 videos for home page
+            .limit(3)
             .get();
         
         const videosData = [];
@@ -247,16 +520,21 @@ async function loadLimitedPortfolio() {
 
 // Load portfolio from localStorage (admin panel data)
 function loadPortfolioFromLocalStorage() {
-    const portfolioData = JSON.parse(localStorage.getItem('portfolioData')) || [];
-    const videoData = JSON.parse(localStorage.getItem('videoData')) || [];
-    
-    const imagesData = portfolioData.slice(0, 6).map(item => ({ ...item, type: 'image' }));
-    const videosData = videoData.slice(0, 3).map(item => ({ ...item, type: 'video' }));
-    
-    if (imagesData.length > 0 || videosData.length > 0) {
-        displayPortfolioSections(imagesData, videosData);
-    } else {
-        // Final fallback - default portfolio
+    try {
+        const portfolioData = JSON.parse(localStorage.getItem('portfolioData')) || [];
+        const videoData = JSON.parse(localStorage.getItem('videoData')) || [];
+        
+        const imagesData = portfolioData.slice(0, 6).map(item => ({ ...item, type: 'image' }));
+        const videosData = videoData.slice(0, 3).map(item => ({ ...item, type: 'video' }));
+        
+        if (imagesData.length > 0 || videosData.length > 0) {
+            displayPortfolioSections(imagesData, videosData);
+        } else {
+            // Final fallback - default portfolio
+            displayDefaultPortfolio();
+        }
+    } catch (error) {
+        console.error('Error loading portfolio from localStorage:', error);
         displayDefaultPortfolio();
     }
 }
@@ -363,7 +641,8 @@ function displayDefaultPortfolio() {
     displayPortfolioVideos(defaultVideos);
 }
 
-// ===== IMAGE FULL VIEW MODAL SYSTEM =====
+// ==================== IMAGE MODAL SYSTEM ====================
+
 function initPortfolioModal() {
     const portfolioItems = document.querySelectorAll('.portfolio-item');
     
@@ -449,6 +728,8 @@ function playVideo(videoUrl, platform, videoTitle = 'Video') {
     window.location.href = 'portfolio/portfolio.html#videos';
 }
 
+// ==================== ANIMATION SYSTEMS ====================
+
 // Initialize portfolio animations
 function initPortfolioAnimations() {
     const portfolioItems = document.querySelectorAll('.portfolio-item');
@@ -499,7 +780,7 @@ function initVideoAnimations() {
     });
 }
 
-// Service animations (FIXED)
+// Service animations
 function initServiceAnimations() {
     const serviceCards = document.querySelectorAll('.service-card');
     const serviceObserver = new IntersectionObserver((entries) => {
@@ -524,7 +805,33 @@ function initServiceAnimations() {
     });
 }
 
-// Booking System (FIXED)
+// About section animations
+function initAboutSection() {
+    const aboutSections = [
+        document.querySelector('.about-main-grid'),
+        document.querySelector('.founders-grid')
+    ];
+    
+    const aboutObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry, index) => {
+            if (entry.isIntersecting) {
+                setTimeout(() => {
+                    entry.target.classList.add('visible');
+                }, index * 300);
+            }
+        });
+    }, {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    });
+    
+    aboutSections.forEach(section => {
+        if (section) aboutObserver.observe(section);
+    });
+}
+
+// ==================== BOOKING SYSTEM ====================
+
 function initBookingSystem() {
     const bookingForm = document.getElementById('bookingForm');
     
@@ -582,10 +889,9 @@ function initBookingSystem() {
     }
 }
 
-// Save booking to Firebase (FIXED)
+// Save booking to Firebase
 async function saveBookingToFirebase(bookingData) {
     try {
-        const db = firebase.firestore();
         await db.collection('bookings').add(bookingData);
         console.log('Booking saved to Firebase');
         return true;
@@ -606,227 +912,368 @@ async function saveBookingToFirebase(bookingData) {
     }
 }
 
-// Contact Form Handler (FIXED)
+// ==================== CONTACT FORM ====================
+
 function initContactForm() {
-    const contactForm = document.getElementById('contactForm');
+    const contactForm = document.querySelector('.contact-form');
     
     if (contactForm) {
         contactForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = {
-                name: this.querySelector('input[name="name"]').value.trim(),
-                email: this.querySelector('input[name="email"]').value.trim(),
-                phone: this.querySelector('input[name="phone"]').value.trim(),
-                message: this.querySelector('textarea[name="message"]').value.trim(),
-                timestamp: new Date().toISOString()
-            };
-            
-            // Validation
-            if (!formData.name || !formData.email || !formData.message) {
-                showNotification('Please fill in all required fields (Name, Email, Message)', 'error');
-                return;
-            }
-            
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-            submitBtn.disabled = true;
-            
-            // Simulate form submission
-            setTimeout(() => {
-                try {
-                    // Save to localStorage
-                    let existingData = JSON.parse(localStorage.getItem('contactSubmissions')) || [];
-                    existingData.push(formData);
-                    localStorage.setItem('contactSubmissions', JSON.stringify(existingData));
-                    
-                    showNotification(`Thank you ${formData.name}! Your message has been sent successfully.`, 'success');
-                    
-                    this.reset();
-                } catch (error) {
-                    console.error('Contact form error:', error);
-                    showNotification('Error sending message. Please try again.', 'error');
-                } finally {
-                    submitBtn.innerHTML = originalText;
-                    submitBtn.disabled = false;
-                }
-            }, 1500);
+            // FormSubmit.co will handle the submission
+            showNotification('Sending your message...', 'info');
         });
     }
 }
 
-// WhatsApp integration (FIXED)
-function openWhatsApp(prefilledMessage = '') {
-    const phone = '919471640485';
-    const message = prefilledMessage || 'Hello! I want to book photography/videography services';
-    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
-}
-
-// Scroll to booking with pre-selected service (FIXED)
-function scrollToBooking(serviceType) {
-    const bookingSection = document.getElementById('booking');
-    const serviceSelect = document.getElementById('serviceType');
-    
-    if (bookingSection && serviceSelect) {
-        serviceSelect.value = serviceType;
-        bookingSection.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-        });
-    }
-}
-
-// Send WhatsApp notification for booking (FIXED)
-function sendWhatsAppBookingNotification(bookingData) {
-    const phone = '919471640485';
-    const serviceName = getServiceDisplayName(bookingData.serviceType);
-    
-    const message = `📸 NEW BOOKING REQUEST - ${serviceName.toUpperCase()}
-
-👤 Client: ${bookingData.name}
-📞 Phone: ${bookingData.phone}
-📧 Email: ${bookingData.email || 'Not provided'}
-
-🎯 Service: ${serviceName}
-📅 Date: ${bookingData.eventDate || 'Not specified'}
-📍 Location: ${bookingData.location || 'Not specified'}
-
-📝 Requirements:
-${bookingData.message || 'No additional details'}
-
-⏰ Received: ${new Date().toLocaleString()}
-🌐 Source: Website Booking Form`;
-
-    const whatsappURL = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-    
-    // Open WhatsApp in new tab
-    window.open(whatsappURL, '_blank');
-}
-
-// Helper function to get service display name (FIXED)
-function getServiceDisplayName(serviceKey) {
-    const serviceNames = {
-        'wedding-photography': 'Wedding Photography',
-        'wedding-videography': 'Wedding Videography', 
-        'wedding-combo': 'Wedding Photo+Video Combo',
-        'pre-wedding-shoot': 'Pre-Wedding Shoot',
-        'birthday-photography': 'Birthday Photography',
-        'anniversary-shoot': 'Anniversary Shoot',
-        'corporate-event': 'Corporate Event Coverage',
-        'baby-shower': 'Baby Shower Photography',
-        'engagement': 'Engagement Ceremony',
-        'family-portrait': 'Family Portrait',
-        'couple-shoot': 'Couple Shoot',
-        'maternity-shoot': 'Maternity Photography',
-        'newborn-photography': 'Newborn Photography',
-        'professional-portfolio': 'Professional Portfolio',
-        'drone-photography': 'Drone Photography',
-        'aerial-videography': 'Aerial Videography',
-        'commercial-photography': 'Commercial Photography',
-        'product-photography': 'Product Photography',
-        'real-estate-photography': 'Real Estate Photography',
-        'video-editing': 'Video Editing',
-        'photo-editing': 'Photo Editing',
-        'album-design': 'Photo Album Design',
-        'cinematic-video': 'Cinematic Video Making',
-        'other': 'Photography Service'
-    };
-    
-    return serviceNames[serviceKey] || 'Photography Service';
-}
-
-// Helper function to get category display name (FIXED)
-function getCategoryDisplayName(category) {
-    const categoryMap = {
-        'wedding': 'Wedding Photography',
-        'pre-wedding': 'Pre-Wedding Shoots',
-        'portrait': 'Portrait Photography',
-        'events': 'Events',
-        'drone': 'Drone Shots'
-    };
-    return categoryMap[category] || category || 'Photography';
-}
-
-// Notification system (FIXED)
-function showNotification(message, type = 'info') {
-    const existingNotification = document.querySelector('.notification');
-    if (existingNotification) {
-        existingNotification.remove();
-    }
-    
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.innerHTML = `
-        <div class="notification-content">
-            <span class="notification-message">${message}</span>
-            <button class="notification-close">&times;</button>
-        </div>
-    `;
-    
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${type === 'success' ? '#27ae60' : type === 'error' ? '#e74c3c' : '#3498db'};
-        color: white;
-        padding: 15px 20px;
-        border-radius: 8px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        z-index: 10000;
-        max-width: 400px;
-        animation: slideInRight 0.3s ease;
-    `;
-    
-    const closeBtn = notification.querySelector('.notification-close');
-    closeBtn.style.cssText = `
-        background: none;
-        border: none;
-        color: white;
-        font-size: 18px;
-        cursor: pointer;
-        margin-left: 10px;
-    `;
-    
-    closeBtn.addEventListener('click', () => {
-        notification.style.animation = 'slideOutRight 0.3s ease';
-        setTimeout(() => notification.remove(), 300);
-    });
-    
-    setTimeout(() => {
-        if (notification.parentElement) {
-            notification.style.animation = 'slideOutRight 0.3s ease';
-            setTimeout(() => notification.remove(), 300);
-        }
-    }, 5000);
-    
-    document.body.appendChild(notification);
-}
-
-// Handle image errors gracefully (FIXED)
-function handleImageError(img) {
-    console.log('Image failed to load:', img.src);
-    if (!img.src.includes('picsum.photos')) {
-        img.src = 'https://picsum.photos/400/600?random=' + Math.floor(Math.random() * 100);
-    }
-}
-
-// Make body visible after loading (FIXED)
-document.addEventListener('DOMContentLoaded', function() {
-    document.body.style.visibility = 'visible';
-    
-    // Add image error handlers
-    document.querySelectorAll('img').forEach(img => {
-        img.onerror = function() {
-            handleImageError(this);
-        };
-    });
-});
+// ==================== GLOBAL FUNCTIONS ====================
 
 // Make functions globally available
 window.closeImageModal = closeImageModal;
 window.openWhatsApp = openWhatsApp;
 window.scrollToBooking = scrollToBooking;
 window.handleImageError = handleImageError;
+window.handleLogoError = handleLogoError;
+window.handleFounderImageError = handleFounderImageError;
+window.playVideo = playVideo;
+
+// ==================== ANIMATED STATS SYSTEM ====================
+
+function initAnimatedStats() {
+    const statsSection = document.querySelector('.stats-box');
+    const statNumbers = document.querySelectorAll('.stat-number');
+    const statItems = document.querySelectorAll('.stat-item');
+    
+    if (!statsSection || statNumbers.length === 0) return;
+    
+    let animationStarted = false;
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !animationStarted) {
+                animationStarted = true;
+                startStatsAnimation();
+            }
+        });
+    }, {
+        threshold: 0.5,
+        rootMargin: '0px 0px -100px 0px'
+    });
+    
+    observer.observe(statsSection);
+}
+
+function startStatsAnimation() {
+    const statNumbers = document.querySelectorAll('.stat-number');
+    const statItems = document.querySelectorAll('.stat-item');
+    
+    statItems.forEach((item, index) => {
+        // Add animation with delay
+        setTimeout(() => {
+            item.classList.add('animate');
+            
+            // Remove animation class after completion
+            setTimeout(() => {
+                item.classList.remove('animate');
+            }, 600);
+        }, index * 300);
+    });
+    
+    statNumbers.forEach((stat, index) => {
+        const target = parseInt(stat.getAttribute('data-count'));
+        const duration = 2000; // 2 seconds
+        const step = target / (duration / 16); // 60fps
+        let current = 0;
+        
+        // Start counting with delay for each stat
+        setTimeout(() => {
+            const timer = setInterval(() => {
+                current += step;
+                
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                    stat.classList.add('animated');
+                    
+                    // Remove animation after some time
+                    setTimeout(() => {
+                        stat.classList.remove('animated');
+                    }, 1000);
+                }
+                
+                // Format number (add + for thousands)
+                if (target >= 1000) {
+                    stat.textContent = `+${Math.floor(current)}`;
+                } else {
+                    stat.textContent = `+${Math.floor(current)}`;
+                }
+            }, 16);
+        }, index * 400); // Staggered delay
+    });
+}
+
+// More advanced counting with easing
+function animateNumber(element, start, end, duration) {
+    const startTime = performance.now();
+    const easeOutQuart = (t) => 1 - --t * t * t * t;
+    
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easedProgress = easeOutQuart(progress);
+        const current = Math.floor(start + (end - start) * easedProgress);
+        
+        if (end >= 1000) {
+            element.textContent = `+${current}`;
+        } else {
+            element.textContent = `+${current}`;
+        }
+        
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        } else {
+            element.classList.add('animated');
+            setTimeout(() => element.classList.remove('animated'), 1000);
+        }
+    }
+    
+    requestAnimationFrame(update);
+}
+
+// Enhanced stats animation with better performance
+function initEnhancedStats() {
+    const statsSection = document.querySelector('.stats-box');
+    if (!statsSection) return;
+    
+    let animated = false;
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !animated) {
+                animated = true;
+                animateAllStats();
+            }
+        });
+    }, {
+        threshold: 0.6,
+        rootMargin: '0px 0px -50px 0px'
+    });
+    
+    observer.observe(statsSection);
+}
+
+function animateAllStats() {
+    const statNumbers = document.querySelectorAll('.stat-number');
+    const statItems = document.querySelectorAll('.stat-item');
+    
+    statNumbers.forEach((stat, index) => {
+        const target = parseInt(stat.getAttribute('data-count'));
+        const duration = 1800 + (index * 200); // Staggered duration
+        
+        setTimeout(() => {
+            // Add animation class to parent item
+            statItems[index].classList.add('animate');
+            
+            // Start number animation
+            animateNumber(stat, 0, target, duration);
+            
+            // Remove animation class
+            setTimeout(() => {
+                statItems[index].classList.remove('animate');
+            }, 600);
+        }, index * 300); // Staggered start
+    });
+}
+
+// Initialize when DOM loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Use enhanced version for better animation
+    initEnhancedStats();
+});
+
+// Optional: Hide on scroll down, show on scroll up
+function initScrollBehavior() {
+    let lastScrollTop = 0;
+    const floatingBtn = document.getElementById('floatingWhatsApp');
+    
+    if (!floatingBtn) return;
+    
+    window.addEventListener('scroll', function() {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        
+        if (scrollTop > lastScrollTop && scrollTop > 100) {
+            // Scrolling down - hide button
+            floatingBtn.style.transform = 'translateY(100px)';
+            floatingBtn.style.opacity = '0';
+        } else {
+            // Scrolling up - show button
+            floatingBtn.style.transform = 'translateY(0)';
+            floatingBtn.style.opacity = '1';
+        }
+        
+        lastScrollTop = scrollTop;
+    }, { passive: true });
+}
+
+// Call this in init if you want scroll behavior
+// initScrollBehavior();
+
+// ==================== TESTIMONIALS SYSTEM ====================
+
+function initTestimonials() {
+    const testimonials = [
+        {
+            id: 1,
+            content: "FotoTaker made our wedding day absolutely magical! The photos captured every emotion perfectly. Kunal and his team were professional, creative, and so much fun to work with. We'll cherish these memories forever!",
+            author: "Priya & Rahul",
+            event: "Wedding Photography",
+            rating: 5,
+            avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face"
+        },
+        {
+            id: 2,
+            content: "Our pre-wedding shoot was an incredible experience! The team took us to beautiful locations in Patna and made us feel so comfortable. The photos look like they're from a fashion magazine! Highly recommended!",
+            author: "Anjali & Amit",
+            event: "Pre-Wedding Shoot",
+            rating: 5,
+            avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face"
+        },
+        {
+            id: 3,
+            content: "We hired FotoTaker for our corporate event and were blown away by their professionalism. They captured all the important moments without being intrusive. The delivery was super fast and quality was exceptional!",
+            author: "Neha Sharma",
+            event: "Corporate Event",
+            rating: 5,
+            avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face"
+        },
+        {
+            id: 4,
+            content: "Family photoshoot with FotoTaker was amazing! They handled our kids so well and got natural, beautiful shots. The editing was perfect - not too much, just enhanced our natural moments. Will definitely book again!",
+            author: "The Verma Family",
+            event: "Family Portrait",
+            rating: 5,
+            avatar: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&h=100&fit=crop&crop=face"
+        },
+        {
+            id: 5,
+            content: "Kunal from FotoTaker is a true artist! He understood exactly what we wanted for our maternity shoot. The locations, lighting, and poses were perfect. These photos will be treasured forever. Thank you!",
+            author: "Sneha & Raj",
+            event: "Maternity Shoot",
+            rating: 5,
+            avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop&crop=face"
+        }
+    ];
+
+    let currentSlide = 0;
+    const track = document.getElementById('testimonialTrack');
+    const dotsContainer = document.getElementById('testimonialDots');
+    
+    if (!track || !dotsContainer) return;
+
+    // Initialize testimonials
+    renderTestimonials(testimonials);
+    createDots(testimonials.length);
+    showSlide(currentSlide);
+
+    // Event listeners
+    document.getElementById('prevTestimonial')?.addEventListener('click', () => {
+        currentSlide = (currentSlide - 1 + testimonials.length) % testimonials.length;
+        showSlide(currentSlide);
+    });
+
+    document.getElementById('nextTestimonial')?.addEventListener('click', () => {
+        currentSlide = (currentSlide + 1) % testimonials.length;
+        showSlide(currentSlide);
+    });
+
+    // Auto slide every 5 seconds
+    setInterval(() => {
+        currentSlide = (currentSlide + 1) % testimonials.length;
+        showSlide(currentSlide);
+    }, 5000);
+}
+
+function renderTestimonials(testimonials) {
+    const track = document.getElementById('testimonialTrack');
+    if (!track) return;
+
+    track.innerHTML = testimonials.map(testimonial => `
+        <div class="testimonial-slide" data-id="${testimonial.id}">
+            <div class="testimonial-card">
+                <div class="testimonial-content">
+                    ${testimonial.content}
+                </div>
+                <div class="testimonial-author">
+                    <img src="${testimonial.avatar}" 
+                         alt="${testimonial.author}" 
+                         class="author-avatar"
+                         onerror="this.src='https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop&crop=face'">
+                    <div class="author-info">
+                        <h4>${testimonial.author}</h4>
+                        <p>${testimonial.event}</p>
+                        <div class="author-rating">
+                            ${'<i class="fas fa-star"></i>'.repeat(testimonial.rating)}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function createDots(count) {
+    const dotsContainer = document.getElementById('testimonialDots');
+    if (!dotsContainer) return;
+
+    dotsContainer.innerHTML = Array.from({ length: count }, (_, i) => 
+        `<div class="slider-dot" data-index="${i}"></div>`
+    ).join('');
+
+    // Add click event to dots
+    dotsContainer.querySelectorAll('.slider-dot').forEach((dot, index) => {
+        dot.addEventListener('click', () => {
+            currentSlide = index;
+            showSlide(currentSlide);
+        });
+    });
+}
+
+function showSlide(index) {
+    const slides = document.querySelectorAll('.testimonial-slide');
+    const dots = document.querySelectorAll('.slider-dot');
+    
+    if (slides.length === 0) return;
+
+    // Hide all slides
+    slides.forEach(slide => slide.classList.remove('active'));
+    dots.forEach(dot => dot.classList.remove('active'));
+
+    // Show current slide
+    slides[index].classList.add('active');
+    dots[index]?.classList.add('active');
+
+    // Move track
+    const track = document.getElementById('testimonialTrack');
+    if (track) {
+        track.style.transform = `translateX(-${index * 100}%)`;
+    }
+}
+
+function openGoogleReviews() {
+    // Replace with your actual Google Reviews URL
+    const googleReviewsURL = "https://share.google/3dhU1uojRLm0hevp7";
+    window.open(googleReviewsURL, '_blank');
+    
+    // Track in analytics
+    if (typeof gtag !== 'undefined') {
+        gtag('event', 'click', {
+            'event_category': 'engagement',
+            'event_label': 'google_reviews'
+        });
+    }
+}
+
+// Initialize testimonials when DOM loads
+document.addEventListener('DOMContentLoaded', function() {
+    initTestimonials();
+});
+
